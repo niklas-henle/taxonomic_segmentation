@@ -7,9 +7,6 @@
 /dataSources/
 /dataSources.local.xml
 
-*.blasttab
-
-*.fasta
 
 *.xml
 
