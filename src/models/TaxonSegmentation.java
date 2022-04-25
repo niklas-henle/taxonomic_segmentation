@@ -24,7 +24,6 @@ public class TaxonSegmentation {
                 segmentation[i] = new ArrayList<>();
             }
             segmentation[i].add(taxon);
-
         }
 
     }

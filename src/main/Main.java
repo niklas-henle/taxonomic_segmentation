@@ -15,16 +15,16 @@ public class Main {
         ArrayList<String[]> blastTabFile = Utils.blastTabParser(args[1]);
         tSSeqHashMap = Utils.generateSegments(blastTabFile, tSSeqHashMap);
 
-        TSSeq test = tSSeqHashMap.get("869");
         int maxLength = 0;
-        for (ArrayList<String> seg: test.getSegmentation().getSegmentation()
-             ) {
-            if (seg != null) {
-                maxLength = Math.max(seg.size(), maxLength);
-            }
+        for (TSSeq test: tSSeqHashMap.values()) {
+            for (ArrayList<String> seg : test.getSegmentation().getSegmentation()
+            ) {
+                if (seg != null) {
+                    maxLength = Math.max(seg.size(), maxLength);
+                }
 
+            }
         }
         System.out.println(maxLength);
-
     }
 }

@@ -27,18 +27,22 @@ public class Utils {
 
             } else if (!currentTaxonSegment.getSeqId().equals(entry[0])) {
                 // If we finished the current sequence add it to the TaxonSegment and the sequence
+
                 TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
                 currentTSSeq.setSegmentation(currentTaxonSegment);
                 TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
-                if (TSSeqs.get(entry[0]).getSeq() == null) {
-                    System.out.println(TSSeqs);
-                }
+
                 currentTaxonSegment = new TaxonSegmentation(entry[0], TSSeqs.get(entry[0]).getSeq().length());
             }
             currentTaxonSegment.addSegmentation(Integer.parseInt(entry[6]), Integer.parseInt(entry[7]), entry[1]);
 
         }
-        
+
+        if(currentTaxonSegment != null) {
+            TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
+            currentTSSeq.setSegmentation(currentTaxonSegment);
+            TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
+        }
         return TSSeqs;
     }
 
