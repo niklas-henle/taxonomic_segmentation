@@ -9,8 +9,7 @@ import java.util.ArrayList;
 public class BlastTabParser {
 
     public static void main(String[] args) throws IOException {
-        ArrayList<String[]> test = blastTabParser("../../data/alignments/epbrr4mpbp8-Alphaproteobacteria-28211.blasttab");
-
+        ArrayList<String[]> test = blastTabParser(args[0]);
     }
 
     private static ArrayList<String[]> blastTabParser(String path) throws IOException {
