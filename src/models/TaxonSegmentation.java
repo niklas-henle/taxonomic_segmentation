@@ -1,13 +1,16 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TaxonSegmentation {
-    public String seqId;
-    public ArrayList<ArrayList<String>> segmentation = new ArrayList<>();
+    private String seqId;
+    private ArrayList<String>[] segmentation;
 
-    public TaxonSegmentation(String seqId) {
+    public TaxonSegmentation(String seqId, int seqLength) {
         this.seqId = seqId;
+        this.segmentation = new ArrayList[seqLength];
+
     }
 
     /**
@@ -18,7 +21,11 @@ public class TaxonSegmentation {
      */
     public void addSegmentation(int start, int stop, String taxon){
         for(int i = start; i <= stop; i++) {
-            segmentation.get(i).add(taxon);
+            if(segmentation[i] == null) {
+                segmentation[i] = new ArrayList<>();
+            }
+            segmentation[i].add(taxon);
+
         }
 
     }
@@ -34,11 +41,11 @@ public class TaxonSegmentation {
         this.seqId = seqId;
     }
 
-    public ArrayList<ArrayList<String>> getSegmentation() {
+    public ArrayList<String>[] getSegmentation() {
         return segmentation;
     }
 
-    public void setSegmentation(ArrayList<ArrayList<String>> segmentation) {
+    public void setSegmentation(ArrayList<String>[] segmentation) {
         this.segmentation = segmentation;
     }
 }

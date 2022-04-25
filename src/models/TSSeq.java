@@ -6,6 +6,10 @@ public class TSSeq {
     String seq; // query sequence of the alignment
     TaxonSegmentation segmentation; // List of sequence length identifier and taxon associated with the identifier.
 
+    public TSSeq(String seqId) {
+        this.seqId = seqId;
+    }
+
     public TSSeq(String seqId, String seq, TaxonSegmentation segmentation) {
         this.seqId = seqId;
         this.seq = seq;
