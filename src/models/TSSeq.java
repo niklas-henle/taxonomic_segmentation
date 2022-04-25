@@ -1,6 +1,16 @@
 package models;
 // Taxon segmented sequence
 
+/**
+ * Sequence ids with associated taxon
+ * 0 -> [ T1, T2, T5 ... ]
+ * 1 -> [ T1, T2, ... ]
+ * . -> [ T2, T5, ... ]
+ * .
+ * .
+ * n -> [Ti, Tj, Tk ... ]
+ */
+
 public class TSSeq {
     String seqId;
     String seq; // query sequence of the alignment
