@@ -80,6 +80,13 @@ public class Utils {
         return parsedSequences;
     }
 
+    /**
+     *
+     * @param path path to the blastTab file
+     * @return Arraylist of the separated blastTab entries
+     * <a href="https://www.metagenomics.wiki/tools/blast/blastn-output-format-6"></a>
+     * @throws IOException throws exception
+     */
     public static ArrayList<String[]> blastTabParser(String path) throws IOException {
 
         ArrayList<String[]> fileContent = new ArrayList<>();
