@@ -43,5 +43,18 @@ public class Main {
            throw new RuntimeException(e);
        }
 
+       Alignment[] intervals = { new Alignment("", 0,12, 0, 0),
+               new Alignment("", 50,80, 0, 0),
+               new Alignment("", 45,90, 0, 0),
+               new Alignment("", 30,55, 0, 0),
+               new Alignment("", 70,75, 0, 0)};
+       IntervalNode tree = new IntervalNode();
+       for (Alignment i: intervals
+            ) {
+
+           tree = tree.insert(tree, i);
+       }
+       System.out.println(tree.getRight().getRight().getMax());
+
    }
 }

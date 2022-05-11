@@ -1,55 +1,18 @@
 package utils;
 
 import models.TSSeq;
-import models.TaxonSegmentation;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Utils {
 
-
-    /**
-     * Use the information of the blastTab file to generate a segmentation for the sequence
-     * @param blastTab blastTab array.
-     * @return Hashmap Seiq, TSSeqs
-     */
-    public static HashMap<String, TSSeq> generateSegments(ArrayList<String[]> blastTab, HashMap<String, TSSeq> TSSeqs) {
-
-        TaxonSegmentation currentTaxonSegment = null;
-        for(String[] entry: blastTab) {
-            if(currentTaxonSegment == null) {
-                TSSeq currentTSSeq = TSSeqs.get(entry[0]);
-                currentTaxonSegment = new TaxonSegmentation(entry[0], currentTSSeq.getSeq().length());
-
-            } else if (!currentTaxonSegment.getSeqId().equals(entry[0])) {
-                // If we finished the current sequence add it to the TaxonSegment and the sequence
-
-                TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
-                currentTSSeq.setSegmentation(currentTaxonSegment);
-                TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
-
-                currentTaxonSegment = new TaxonSegmentation(entry[0], TSSeqs.get(entry[0]).getSeq().length());
-            }
-            currentTaxonSegment.addSegmentation(Integer.parseInt(entry[6]), Integer.parseInt(entry[7]), entry[1]);
-
-        }
-
-        if(currentTaxonSegment != null) {
-            TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
-            currentTSSeq.setSegmentation(currentTaxonSegment);
-            TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
-        }
-        return TSSeqs;
-    }
 
     /**
      * Parse fastA file into a list of TSSeqs.
