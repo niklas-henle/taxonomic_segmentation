@@ -47,7 +47,6 @@ public class IntervalTree {
         // Update the balance factor of each node
         // And, balance the tree
         root.height = 1 + Math.max(checkForHeight(root.right), checkForHeight(root.left)) ;
-        System.out.println(root.height);
         int balance = checkForHeight(root.right) - checkForHeight(root.left);
         if (balance < -1) {
             if ( checkForHeight(root.left.right) - checkForHeight(root.left.left) > 0) {
