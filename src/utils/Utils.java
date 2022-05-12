@@ -1,5 +1,7 @@
 package utils;
 
+import models.Alignment;
+import models.IntervalTree;
 import models.TSSeq;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -13,6 +15,19 @@ import java.util.HashMap;
 
 public class Utils {
 
+    public static IntervalTree buildTreeFromBlastTab(ArrayList<String[]> tab) {
+        IntervalTree tree = new IntervalTree();
+
+        for (String[] row: tab) {
+
+            Alignment alignment = new Alignment(row[1], Integer.parseInt(row[5]), Integer.parseInt(row[6]),
+                    Float.parseFloat(row[10]), Float.parseFloat(row[11]));
+            tree.addNode(alignment);
+
+        }
+        return tree;
+
+    }
 
     /**
      * Parse fastA file into a list of TSSeqs.
@@ -20,10 +35,9 @@ public class Utils {
      * @return return Hashmap of Seqid, TSSeq
      * @throws IOException throws IOException
      */
-    public static HashMap<String,TSSeq> fastAParser(String path) throws IOException {
+    public static TSSeq fastAParser(String path) throws IOException {
 
         BufferedReader reader = new BufferedReader(new FileReader(path));
-        HashMap<String, TSSeq> parsedSequences = new HashMap<>();
         String line = reader.readLine();
         TSSeq currentTSSeq = null;
         StringBuilder currentSeq = new StringBuilder();
@@ -33,7 +47,7 @@ public class Utils {
 
                 if (currentTSSeq != null) {
                     currentTSSeq.setSeq(currentSeq.toString());
-                    parsedSequences.put(currentTSSeq.getSeqId(), currentTSSeq);
+                    return currentTSSeq;
                 }
                 currentTSSeq = new TSSeq(line.split(">")[1]);
                 currentSeq = new StringBuilder();
@@ -46,10 +60,9 @@ public class Utils {
 
         if (currentTSSeq != null) {
             currentTSSeq.setSeq(currentSeq.toString());
-            parsedSequences.put(currentTSSeq.getSeqId(), currentTSSeq);
         }
 
-        return parsedSequences;
+        return currentTSSeq;
     }
 
     /**

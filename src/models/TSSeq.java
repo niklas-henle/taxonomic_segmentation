@@ -14,13 +14,13 @@ package models;
 public class TSSeq {
     String seqId;
     String seq; // query sequence of the alignment
-    IntervalNode intervalTree; // List of sequence length identifier and taxon associated with the identifier.
+    IntervalTree intervalTree; // List of sequence length identifier and taxon associated with the identifier.
 
     public TSSeq(String seqId) {
         this.seqId = seqId;
     }
 
-    public TSSeq(String seqId, String seq, IntervalNode intervals) {
+    public TSSeq(String seqId, String seq, IntervalTree intervals) {
         this.seqId = seqId;
         this.seq = seq;
         this.intervalTree = intervals;
@@ -43,11 +43,11 @@ public class TSSeq {
         this.seq = seq;
     }
 
-    public IntervalNode getIntervalTree() {
+    public IntervalTree getIntervalTree() {
         return intervalTree;
     }
 
-    public void setIntervalTree(IntervalNode intervalTree) {
+    public void setIntervalTree(IntervalTree intervalTree) {
         this.intervalTree = intervalTree;
     }
 }

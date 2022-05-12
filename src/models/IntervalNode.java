@@ -2,14 +2,13 @@ package models;
 
 public class IntervalNode {
     Alignment interval;
-    int max;
+    int max, height;
     IntervalNode left, right;
 
     public IntervalNode(Alignment interval) {
         this.max = interval.qend();
         this.interval = interval;
-        this.left = null;
-        this.right = null;
+        this.height = 1;
     }
     /**
      * Getter and setter methods
@@ -46,6 +45,14 @@ public class IntervalNode {
 
     public void setRight(IntervalNode right) {
         this.right = right;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 }
 
