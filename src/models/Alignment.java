@@ -1,11 +1,10 @@
 package models;
 
-
 import utils.DatabaseConnector;
-
 import java.sql.SQLException;
 
 public record Alignment(String sseqid, int qstart, int qend, float eval, float bitscore) {
+
     @Override
     public String sseqid() {
         try {
