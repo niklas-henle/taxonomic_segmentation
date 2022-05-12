@@ -8,7 +8,6 @@ public class IntervalNode {
     public IntervalNode(Alignment interval) {
         this.max = interval.qend();
         this.interval = interval;
-        this.height = 1;
     }
     /**
      * Getter and setter methods

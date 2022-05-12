@@ -60,9 +60,6 @@ public class Main {
             ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
 
             fastA.setIntervalTree(Utils.buildTreeFromBlastTab(blastTab));
-
-            System.out.println(fastA.getIntervalTree().getRoot().getLeft().getLeft().getMax());
-            System.out.println(fastA.getIntervalTree().checkForHeight(fastA.getIntervalTree().getRoot()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

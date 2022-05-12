@@ -27,6 +27,7 @@ public class IntervalTree {
      * @param interval alignment used as interval
      * @return new intervalNode
      */
+
     private IntervalNode insert(IntervalNode root, Alignment interval) {
 
         if (root == null) {
@@ -38,31 +39,29 @@ public class IntervalTree {
         if (interval.qstart() < lowRoot) {
             root.left = insert(root.left, interval);
         }
-        else if (interval.qstart() > lowRoot){
+        else {
             root.right = insert(root.right, interval);
         }
-        else return root;
 
 
         // Update the balance factor of each node
         // And, balance the tree
-        root.height = 1 + Math.max(checkForHeight(root.left), checkForHeight(root.left)) ;
-        int balance = checkForHeight(root.left) - checkForHeight(root.right);
-        if (balance > 1) {
-            if (root.left != null && interval.qstart() < root.left.interval.qstart()) {
-                return rotateRight(root);
-            } else if (root.left != null && interval.qstart() > root.left.interval.qstart()) {
-                root.left = rotateLeft(root.left);
-                return rotateRight(root);
-            }
-        }
+        root.height = 1 + Math.max(checkForHeight(root.right), checkForHeight(root.left)) ;
+        System.out.println(root.height);
+        int balance = checkForHeight(root.right) - checkForHeight(root.left);
         if (balance < -1) {
-            if (interval.qstart() > root.right.interval.qstart()) {
-                return rotateLeft(root);
-            } else if (interval.qstart() < root.right.interval.qstart()) {
-                root.right = rotateRight(root.right);
-                return rotateLeft(root);
+            if ( checkForHeight(root.left.right) - checkForHeight(root.left.left) > 0) {
+                root.left = rotateLeft(root.left);
             }
+            root = rotateRight(root);
+        }
+
+        // Right-heavy?
+        if (balance > 1) {
+            if ( checkForHeight(root.right.right) - checkForHeight(root.right.left) < 0) {
+                root.right = rotateRight(root.right);
+            }
+            root = rotateLeft(root);
         }
 
 
@@ -73,14 +72,8 @@ public class IntervalTree {
         return root;
     }
 
-    boolean isLeaf(IntervalNode node) {
-        if (node == null) {
-            return true;
-        }
-        return node.right == null && node.left == null;
-    }
     public int checkForHeight(IntervalNode node) {
-        return node == null ? 0 : node.height;
+        return node == null ? -1 : node.height;
     }
 
     /**
@@ -112,9 +105,8 @@ public class IntervalTree {
 
     IntervalNode rotateRight(IntervalNode node) {
         IntervalNode leftChild = node.left;
-        IntervalNode rightChild = leftChild.right;
+        node.left = leftChild.right;
         leftChild.right = node;
-        node.left = rightChild;
         node.height = Math.max(checkForHeight(node.left), checkForHeight(node.right)) + 1;
         leftChild.height = Math.max(checkForHeight(leftChild.left), checkForHeight(leftChild.right)) + 1;
         return leftChild;
@@ -122,9 +114,9 @@ public class IntervalTree {
 
     IntervalNode rotateLeft(IntervalNode node) {
         IntervalNode rightChild = node.right;
-        IntervalNode leftChild = rightChild.left;
+
+        node.right = rightChild.left;
         rightChild.left = node;
-        node.right = leftChild;
         node.height = Math.max(checkForHeight(node.left), checkForHeight(node.right)) + 1;
         rightChild.height = Math.max(checkForHeight(rightChild.left), checkForHeight(rightChild.right)) + 1;
         return rightChild;
