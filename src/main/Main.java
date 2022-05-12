@@ -33,7 +33,7 @@ public class Main {
     **/
 
    public static void main(String[] args) {
-       try {
+       /*try {
            DatabaseConnector dbConnector = new DatabaseConnector(args[2]);
            dbConnector.queryAccessionNumber("WP_042695806.1");
            String taxa = Utils.getTaxonomyFromTid(dbConnector.queryAccessionNumber("WP_042695806.1"));
@@ -41,20 +41,20 @@ public class Main {
            dbConnector.closeConnection();
        } catch (SQLException e) {
            throw new RuntimeException(e);
-       }
+       }*/
 
        Alignment[] intervals = { new Alignment("", 0,12, 0, 0),
                new Alignment("", 50,80, 0, 0),
                new Alignment("", 45,90, 0, 0),
                new Alignment("", 30,55, 0, 0),
                new Alignment("", 70,75, 0, 0)};
-       IntervalNode tree = new IntervalNode();
+       IntervalTree tree = new IntervalTree();
        for (Alignment i: intervals
             ) {
 
-           tree = tree.insert(tree, i);
+           tree.addNode(i);
        }
-       System.out.println(tree.getRight().getRight().getMax());
+       System.out.println(tree.getRoot().getRight().getRight().getMax());
 
    }
 }
