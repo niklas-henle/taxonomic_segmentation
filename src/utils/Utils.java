@@ -1,54 +1,32 @@
 package utils;
 
+import models.Alignment;
+import models.IntervalTree;
 import models.TSSeq;
-import models.TaxonSegmentation;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Utils {
 
+    public static IntervalTree buildTreeFromBlastTab(ArrayList<String[]> tab) {
+        IntervalTree tree = new IntervalTree();
 
-    /**
-     * Use the information of the blastTab file to generate a segmentation for the sequence
-     * @param blastTab blastTab array.
-     * @return Hashmap Seiq, TSSeqs
-     */
-    public static HashMap<String, TSSeq> generateSegments(ArrayList<String[]> blastTab, HashMap<String, TSSeq> TSSeqs) {
+        for (String[] row: tab) {
 
-        TaxonSegmentation currentTaxonSegment = null;
-        for(String[] entry: blastTab) {
-            if(currentTaxonSegment == null) {
-                TSSeq currentTSSeq = TSSeqs.get(entry[0]);
-                currentTaxonSegment = new TaxonSegmentation(entry[0], currentTSSeq.getSeq().length());
-
-            } else if (!currentTaxonSegment.getSeqId().equals(entry[0])) {
-                // If we finished the current sequence add it to the TaxonSegment and the sequence
-
-                TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
-                currentTSSeq.setSegmentation(currentTaxonSegment);
-                TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
-
-                currentTaxonSegment = new TaxonSegmentation(entry[0], TSSeqs.get(entry[0]).getSeq().length());
-            }
-            currentTaxonSegment.addSegmentation(Integer.parseInt(entry[6]), Integer.parseInt(entry[7]), entry[1]);
+            Alignment alignment = new Alignment(row[1], Integer.parseInt(row[5]), Integer.parseInt(row[6]),
+                    Float.parseFloat(row[10]), Float.parseFloat(row[11]));
+            tree.addNode(alignment);
 
         }
+        return tree;
 
-        if(currentTaxonSegment != null) {
-            TSSeq currentTSSeq = TSSeqs.get(currentTaxonSegment.getSeqId());
-            currentTSSeq.setSegmentation(currentTaxonSegment);
-            TSSeqs.put(currentTSSeq.getSeqId(), currentTSSeq);
-        }
-        return TSSeqs;
     }
 
     /**
@@ -57,10 +35,9 @@ public class Utils {
      * @return return Hashmap of Seqid, TSSeq
      * @throws IOException throws IOException
      */
-    public static HashMap<String,TSSeq> fastAParser(String path) throws IOException {
+    public static TSSeq fastAParser(String path) throws IOException {
 
         BufferedReader reader = new BufferedReader(new FileReader(path));
-        HashMap<String, TSSeq> parsedSequences = new HashMap<>();
         String line = reader.readLine();
         TSSeq currentTSSeq = null;
         StringBuilder currentSeq = new StringBuilder();
@@ -70,7 +47,7 @@ public class Utils {
 
                 if (currentTSSeq != null) {
                     currentTSSeq.setSeq(currentSeq.toString());
-                    parsedSequences.put(currentTSSeq.getSeqId(), currentTSSeq);
+                    return currentTSSeq;
                 }
                 currentTSSeq = new TSSeq(line.split(">")[1]);
                 currentSeq = new StringBuilder();
@@ -83,10 +60,9 @@ public class Utils {
 
         if (currentTSSeq != null) {
             currentTSSeq.setSeq(currentSeq.toString());
-            parsedSequences.put(currentTSSeq.getSeqId(), currentTSSeq);
         }
 
-        return parsedSequences;
+        return currentTSSeq;
     }
 
     /**
