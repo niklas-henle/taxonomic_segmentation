@@ -1,6 +1,8 @@
 package models;
 
 
+import java.util.ArrayList;
+
 public class IntervalTree {
     public IntervalNode getRoot() {
         return root;
@@ -119,5 +121,23 @@ public class IntervalTree {
         node.height = Math.max(checkForHeight(node.left), checkForHeight(node.right)) + 1;
         rightChild.height = Math.max(checkForHeight(rightChild.left), checkForHeight(rightChild.right)) + 1;
         return rightChild;
+    }
+
+    /**
+     * depth first traversal of the tree
+     * @param node root node
+     * @param traversal acc list for the traversal
+     * @return arraylist of the interval nodes
+     */
+    public ArrayList<IntervalNode> depthFirstTraversal( IntervalNode node, ArrayList<IntervalNode> traversal) {
+        if (node == null) {
+            return traversal;
+        }
+
+        traversal.add(node);
+        depthFirstTraversal(node.left, traversal);
+        depthFirstTraversal(node.right, traversal);
+        return traversal;
+
     }
 }
