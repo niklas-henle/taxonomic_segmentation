@@ -6,6 +6,7 @@ import models.*;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Main {
 
@@ -21,9 +22,16 @@ public class Main {
 
             TSSeq fastA = Utils.fastAParser(args[0]);
             ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
+            System.out.println(fastA.getSeq().length());
 
             fastA.setIntervalTree(Utils.buildTreeFromBlastTab(blastTab));
             System.out.println(fastA.getIntervalTree().getRoot().getInterval().sseqid());
+            Segmentation seg = new Segmentation();
+            seg.generateTable(fastA.getIntervalTree());
+
+
+
+
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }

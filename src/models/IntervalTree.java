@@ -36,9 +36,9 @@ public class IntervalTree {
             return new IntervalNode(interval);
         }
 
-        int lowRoot = root.interval.qstart();
+        int lowRoot = root.interval.qend();
 
-        if (interval.qstart() < lowRoot) {
+        if (interval.qend() < lowRoot) {
             root.left = insert(root.left, interval);
         }
         else {
@@ -124,12 +124,20 @@ public class IntervalTree {
     }
 
     /**
+     * Wrapper function for tree traversal
+     */
+
+    public ArrayList<IntervalNode> traversal() {
+        return depthFirstTraversal(root, new ArrayList<>());
+    }
+
+    /**
      * depth first traversal of the tree
      * @param node root node
      * @param traversal acc list for the traversal
      * @return arraylist of the interval nodes
      */
-    public ArrayList<IntervalNode> depthFirstTraversal( IntervalNode node, ArrayList<IntervalNode> traversal) {
+    private ArrayList<IntervalNode> depthFirstTraversal( IntervalNode node, ArrayList<IntervalNode> traversal) {
         if (node == null) {
             return traversal;
         }
@@ -139,5 +147,18 @@ public class IntervalTree {
         depthFirstTraversal(node.right, traversal);
         return traversal;
 
+    }
+
+    public Integer getMaxEndValue() {
+       return getMaxEndValue(this.root);
+    }
+
+    private Integer getMaxEndValue(IntervalNode root) {
+
+        if(root.right == null) {
+            return root.getInterval().qend();
+        }
+
+        return getMaxEndValue(root.right);
     }
 }
