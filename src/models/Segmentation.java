@@ -10,12 +10,12 @@ public class Segmentation {
     }
 
 
-    public HashMap<String, ArrayList<Alignment>> generateTable(IntervalTree tree) {
+    public ArrayList<ArrayList<Alignment>> generateTable(IntervalTree tree) {
 
         HashMap<String, ArrayList<Alignment>> tab = new HashMap<>();
 
-       ArrayList<IntervalNode> nodes = tree.traversal();
-
+        ArrayList<IntervalNode> nodes = tree.traversal();
+        System.out.println(nodes.size());
         for (IntervalNode n: nodes
              ) {
             if(tab.containsKey(n.interval.sseqid())) {
@@ -25,12 +25,7 @@ public class Segmentation {
             }
         }
 
-        for (String s: tab.keySet()) {
-            if (tab.get(s).size() > 1) {
-                System.out.println(s + ": " + tab.get(s).size());
-            }
-        }
-        List<Alignment>[] tabs = new List[57255];
+        ArrayList<Alignment>[] tabs = new ArrayList[tree.getMaxEndValue()+1];
         for(IntervalNode n: nodes){
             if(tabs[n.interval.qstart()] != null) {
                 tabs[n.interval.qstart()].add(n.interval);
@@ -43,14 +38,24 @@ public class Segmentation {
                 tabs[n.interval.qend()] = new ArrayList<>(Arrays.asList(n.interval));
             }
         }
+        ArrayList<ArrayList<Alignment>> ret = new ArrayList<>(Arrays.asList(tabs));
+        ret.removeAll(Collections.singleton(null));
 
-        for (int i = 0; i < tabs.length; i++) {
-           if(tabs[i] == null) {
-               System.out.println("empty at " + i);
-           }
+        ArrayList<String> tax = new ArrayList<>();
+        for(ArrayList<Alignment> l: ret) {
+            if (l != null) {
+                for (Alignment a: l
+                     ) {
+
+
+                }
+            }
+            else {
+                System.out.println("Empty");
+            }
         }
 
-        return tab;
+        return new ArrayList<>(Arrays.asList(tabs));
 
     }
 
