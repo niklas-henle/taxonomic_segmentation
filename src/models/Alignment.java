@@ -16,5 +16,10 @@ public record Alignment(String sseqid, int qstart, int qend, float eval, float b
         }
     }
     **/
+    @Override
+    public boolean equals(Object obj) {
+
+        return ((Alignment) obj).sseqid.equals(this.sseqid);
+    }
 }
 

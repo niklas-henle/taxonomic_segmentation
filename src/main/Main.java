@@ -24,13 +24,11 @@ public class Main {
             ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
             System.out.println(fastA.getSeq().length());
 
-            fastA.setIntervalTree(Utils.buildTreeFromBlastTab(blastTab));
-            System.out.println(fastA.getIntervalTree().getRoot().getInterval().sseqid());
+            fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab.subList(0,10))));
+            Alignment root = fastA.getIntervalTree().getRoot().getInterval();
             Segmentation seg = new Segmentation();
-            seg.generateTable(fastA.getIntervalTree());
-
-
-
+            ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
+            System.out.println(seg.generateDPTable(tab, null,0, 0, new HashMap<String, ArrayList<Integer>>()));
 
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
