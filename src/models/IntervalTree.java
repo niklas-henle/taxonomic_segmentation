@@ -149,11 +149,11 @@ public class IntervalTree {
 
     }
 
-    public Integer getMaxEndValue() {
+    public int getMaxEndValue() {
        return getMaxEndValue(this.root);
     }
 
-    private Integer getMaxEndValue(IntervalNode root) {
+    private int getMaxEndValue(IntervalNode root) {
 
         if(root.right == null) {
             return root.getInterval().qend();
