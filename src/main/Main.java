@@ -28,13 +28,12 @@ public class Main {
             Alignment root = fastA.getIntervalTree().getRoot().getInterval();
             Segmentation seg = new Segmentation();
             ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
-           // HashMap<String, int[]> dp = seg.generateDPTable(tab);
-            for (ArrayList<Alignment> s: tab
+            HashMap<String, float[]> dp = seg.generateDPTable(tab);
+            ArrayList<String> tb = seg.traceback(dp);
+
+            for (String s: tb
                  ) {
-                for(Alignment m: s) {
-                    System.out.print(m + " ");
-                }
-                System.out.println();
+                System.out.print(s + " ");
             }
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
