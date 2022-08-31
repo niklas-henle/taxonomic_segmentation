@@ -9,23 +9,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Main {
-
+    public static int match = 3;
+    public static int mismatch = 4;
+    public static int gapPenalty = 1;
+    public static int gapLength = 0;
     public static void main(String[] args) {
 
+        if (args.length == 6) {
+            match = Integer.parseInt(args[3]);
+            mismatch = Integer.parseInt(args[4]);
+            gapPenalty = Integer.parseInt(args[5]);
+        }
 
         try {
-            DatabaseConnector dbConnector = new DatabaseConnector(args[2]);
-            dbConnector.queryAccessionNumber("WP_042695806.1");
-            String taxa = Utils.getTaxonomyFromTid(dbConnector.queryAccessionNumber("WP_042695806.1"));
-            System.out.println(taxa);
-            dbConnector.closeConnection();
 
             TSSeq fastA = Utils.fastAParser(args[0]);
             ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
             System.out.println(fastA.getSeq().length());
 
             fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab.subList(0,20))));
-            Alignment root = fastA.getIntervalTree().getRoot().getInterval();
+
             Segmentation seg = new Segmentation();
             ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
             HashMap<String, float[]> dp = seg.generateDPTable(tab);
@@ -35,7 +38,7 @@ public class Main {
                  ) {
                 System.out.print(s + " ");
             }
-        } catch (IOException | SQLException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

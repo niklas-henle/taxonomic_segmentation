@@ -32,8 +32,8 @@ public class DatabaseConnector {
 
         try {
             Statement query = connection.createStatement();
-            ResultSet res = query.executeQuery(String.format("SELECT TAXONOMY FROM mappings WHERE Accession='%s'", an));
-            return res.getString("Taxonomy");
+            ResultSet res = query.executeQuery(String.format("SELECT GTDB FROM mappings WHERE Accession='%s'", an));
+            return res.getString("GTDB");
         } catch (SQLException e) {
             System.err.println(e.getMessage());
             throw new RuntimeException(e);

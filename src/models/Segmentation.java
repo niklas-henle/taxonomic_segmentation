@@ -2,12 +2,9 @@ package models;
 
 import java.util.*;
 
-public class Segmentation {
+import static main.Main.*;
 
-    int gapPenalty = 5;
-    int match = 2;
-    int mismatch = -3 ;
-    int gapCount = 0;
+public class Segmentation {
 
     public ArrayList<ArrayList<Alignment>> generateTable(IntervalTree tree) {
 
@@ -138,7 +135,7 @@ public class Segmentation {
             return match;
         }
         else {
-            return mismatch;
+            return Math.max(mismatch, gapPenalty*gapLength);
         }
     }
 
