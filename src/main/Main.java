@@ -3,7 +3,9 @@ package main;
 import utils.*;
 import models.*;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ public class Main {
             File[] binListing = bins.listFiles();
             File alignments = new File("./data/alignments");
             File[] alignmentListing = alignments.listFiles();
-
+            BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
             if (binListing != null) {
                 for (int i =0; i < binListing.length; i++) {
                     String binPath = binListing[i].getAbsolutePath();
@@ -55,17 +57,22 @@ public class Main {
                             count.put(c,1);
                         }
                     }
+                    writer.write("==========================================================");
+                    writer.write(binPath);
+                    writer.write("==========================================================");
 
                     System.out.println("==========================================================");
                     System.out.println(binPath);
                     System.out.println("==========================================================");
                     for (String k: count.keySet()
                     ) {
+                        writer.write(k + ": " + count.get(k));
                         System.out.println(k + ": " + count.get(k));
                     }
 
                 }
             }
+            writer.close();
 
 
 
