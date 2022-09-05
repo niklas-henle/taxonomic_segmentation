@@ -22,7 +22,7 @@ public class Segmentation {
             }
         }
         for(int i = 0; i < tabs.length; i++) {
-            if(tabs[i].size() == 1) {
+            if(tabs[i] != null && tabs[i].size() == 1) {
                 if(tabs[i].get(0).qstart() != i ||tabs[i].get(0).qend() != i ) {
                     tabs[i] = null;
                 }

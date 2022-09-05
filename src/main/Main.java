@@ -3,6 +3,7 @@ package main;
 import utils.*;
 import models.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -22,22 +23,53 @@ public class Main {
         }
 
         try {
+            File bins = new File("./data/bins");
+            File[] binListing = bins.listFiles();
+            File alignments = new File("./data/alignments");
+            File[] alignmentListing = alignments.listFiles();
 
-            TSSeq fastA = Utils.fastAParser(args[0]);
-            ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
-            System.out.println(fastA.getSeq().length());
+            if (binListing != null) {
+                for (int i =0; i < binListing.length; i++) {
+                    String binPath = binListing[i].getAbsolutePath();
+                    String alignmentPath = alignmentListing[i].getAbsolutePath();
+                    if (binPath.contains(".DS_Store") || alignmentPath.contains(".DS_Store")) {
+                        continue;
+                    }
+                    TSSeq fastA = Utils.fastAParser(binListing[i].getAbsolutePath());
+                    ArrayList<String[]> blastTab = Utils.blastTabParser(alignmentListing[i].getAbsolutePath());
+                    System.out.println(fastA.getSeq().length());
 
-            fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab.subList(0,20))));
+                    fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab)));
 
-            Segmentation seg = new Segmentation();
-            ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
-            HashMap<String, float[]> dp = seg.generateDPTable(tab);
-            ArrayList<String> tb = seg.traceback(dp);
+                    Segmentation seg = new Segmentation();
+                    ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
+                    HashMap<String, float[]> dp = seg.generateDPTable(tab);
+                    ArrayList<String> tb = seg.traceback(dp);
 
-            for (String s: tb
-                 ) {
-                System.out.print(s + " ");
+                    HashMap<String, Integer> count = new HashMap<>();
+                    for (String c: tb
+                    ) {
+                        if(count.containsKey(c)) {
+                            count.put(c, count.get(c) + 1);
+                        } else {
+                            count.put(c,1);
+                        }
+                    }
+
+                    System.out.println("==========================================================");
+                    System.out.println(binPath);
+                    System.out.println("==========================================================");
+                    for (String k: count.keySet()
+                    ) {
+                        System.out.println(k + ": " + count.get(k));
+                    }
+
+                }
             }
+
+
+
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
