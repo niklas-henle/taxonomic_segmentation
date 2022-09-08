@@ -31,47 +31,47 @@ public class Main {
             File[] alignmentListing = alignments.listFiles();
             BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
             if (binListing != null) {
-                for (int i =0; i < binListing.length; i++) {
+            /* for (int i =0; i < binListing.length; i++) {
                     String binPath = binListing[i].getAbsolutePath();
                     String alignmentPath = alignmentListing[i].getAbsolutePath();
                     if (binPath.contains(".DS_Store") || alignmentPath.contains(".DS_Store")) {
                         continue;
+                    }*/
+                TSSeq fastA = Utils.fastAParser(args[0]);
+                ArrayList<String[]> blastTab = Utils.blastTabParser(args[1]);
+                System.out.println(fastA.getSeq().length());
+
+                fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab)));
+
+                Segmentation seg = new Segmentation();
+                ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
+                HashMap<String, float[]> dp = seg.generateDPTable(tab);
+                ArrayList<String> tb = seg.traceback(dp);
+
+                HashMap<String, Integer> count = new HashMap<>();
+                for (String c: tb
+                ) {
+                    if(count.containsKey(c)) {
+                        count.put(c, count.get(c) + 1);
+                    } else {
+                        count.put(c,1);
                     }
-                    TSSeq fastA = Utils.fastAParser(binListing[i].getAbsolutePath());
-                    ArrayList<String[]> blastTab = Utils.blastTabParser(alignmentListing[i].getAbsolutePath());
-                    System.out.println(fastA.getSeq().length());
-
-                    fastA.setIntervalTree(Utils.buildTreeFromBlastTab(new ArrayList<>(blastTab)));
-
-                    Segmentation seg = new Segmentation();
-                    ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
-                    HashMap<String, float[]> dp = seg.generateDPTable(tab);
-                    ArrayList<String> tb = seg.traceback(dp);
-
-                    HashMap<String, Integer> count = new HashMap<>();
-                    for (String c: tb
-                    ) {
-                        if(count.containsKey(c)) {
-                            count.put(c, count.get(c) + 1);
-                        } else {
-                            count.put(c,1);
-                        }
-                    }
-                    writer.write("==========================================================");
-                    writer.write(binPath);
-                    writer.write("==========================================================");
-
-                    System.out.println("==========================================================");
-                    System.out.println(binPath);
-                    System.out.println("==========================================================");
-                    for (String k: count.keySet()
-                    ) {
-                        writer.write(k + ": " + count.get(k));
-                        System.out.println(k + ": " + count.get(k));
-                    }
-
                 }
+                writer.write("==========================================================");
+                writer.write(args[0]);
+                writer.write("==========================================================");
+
+                System.out.println("==========================================================");
+                System.out.println(args[0]);
+                System.out.println("==========================================================");
+                for (String k: count.keySet()
+                ) {
+                    writer.write(k + ": " + count.get(k));
+                    System.out.println(k + ": " + count.get(k));
+                }
+
             }
+            //}
             writer.close();
 
 
