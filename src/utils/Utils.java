@@ -19,8 +19,7 @@ public class Utils {
         IntervalTree tree = new IntervalTree();
 
         for (String[] row: tab) {
-
-            Alignment alignment = new Alignment(row[1], Integer.parseInt(row[5]), Integer.parseInt(row[6]),
+            Alignment alignment = new Alignment(row[1], Integer.parseInt(row[8]), Integer.parseInt(row[9]),
                     Float.parseFloat(row[10]), Float.parseFloat(row[11]));
             tree.addNode(alignment);
 
