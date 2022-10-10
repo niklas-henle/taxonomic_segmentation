@@ -1,7 +1,4 @@
-package models;
-
-import utils.DatabaseConnector;
-import java.sql.SQLException;
+package models.records;
 
 public record Alignment(String sseqid, int qstart, int qend, float eval, float bitscore) {
 

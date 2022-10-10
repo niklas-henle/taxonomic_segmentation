@@ -1,13 +1,13 @@
 package main;
 
+import models.records.Alignment;
+import models.records.Tuple;
 import utils.*;
 import models.*;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -47,28 +47,32 @@ public class Main {
 
             Segmentation seg = new Segmentation();
             ArrayList<ArrayList<Alignment>> tab = seg.generateTable(fastA.getIntervalTree());
-            HashMap<String, float[]> dp = seg.generateDPTable(tab);
-            ArrayList<String> tb = seg.traceback(dp);
+            HashMap<String, Tuple> dp = seg.generateDPTable(tab);
+            ArrayList<Tuple> tb = seg.traceback(dp);
 
             HashMap<String, Integer> count = new HashMap<>();
-            for (String c: tb
+
+            for (Tuple c: tb
             ) {
-                if(count.containsKey(c)) {
-                    count.put(c, count.get(c) + 1);
+                String k = c.alignment().sseqid();
+                if(count.containsKey(k)) {
+                    count.put(k, count.get(k) + 1);
                 } else {
-                    count.put(c,1);
+                    count.put(k,1);
                 }
+
             }
-            writer.write("==========================================================");
+            writer.write("==========================================================\n");
             writer.write(args[0]);
-            writer.write("==========================================================");
+            writer.write("\n");
+            writer.write("==========================================================\n");
 
             System.out.println("==========================================================");
             System.out.println(args[0]);
             System.out.println("==========================================================");
             for (String k: count.keySet()
             ) {
-                writer.write(k + ": " + count.get(k));
+                writer.write(k + ": " + count.get(k) +"\n");
                 System.out.println(k + ": " + count.get(k));
             }
 

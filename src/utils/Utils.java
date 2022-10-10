@@ -1,6 +1,6 @@
 package utils;
 
-import models.Alignment;
+import models.records.Alignment;
 import models.IntervalTree;
 import models.TSSeq;
 
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Utils {
 

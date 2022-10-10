@@ -1,5 +1,7 @@
 package models;
 
+import models.records.Alignment;
+
 public class IntervalNode {
     Alignment interval;
     int max, height;

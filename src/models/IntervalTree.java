@@ -1,6 +1,8 @@
 package models;
 
 
+import models.records.Alignment;
+
 import java.util.ArrayList;
 
 public class IntervalTree {
