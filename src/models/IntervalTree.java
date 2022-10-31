@@ -11,33 +11,33 @@ public class IntervalTree {
 
     /**
      * public function for recursively adding a node to the tree
-     * @param interval alignment used as interval
+     * @param alignment alignment used as alignment
      */
-    public void addNode(Alignment interval) {
-        this.root = insert(this.root, interval);
+    public void addNode(Alignment alignment) {
+        this.root = insert(this.root, alignment);
     }
 
     /**
-     * Insert a new interval into the tree
+     * Insert a new alignment into the tree
      *
      * @param root root node
-     * @param interval alignment used as interval
-     * @return new intervalNode
+     * @param alignment alignment used as alignment
+     * @return new alignmentNode
      */
 
-    private IntervalNode insert(IntervalNode root, Alignment interval) {
+    private IntervalNode insert(IntervalNode root, Alignment alignment) {
 
         if (root == null) {
-            return new IntervalNode(interval);
+            return new IntervalNode(alignment);
         }
 
-        int lowRoot = root.interval.qend();
+        int lowRoot = root.alignment.qend();
 
-        if (interval.qend() < lowRoot) {
-            root.left = insert(root.left, interval);
+        if (alignment.qend() < lowRoot) {
+            root.left = insert(root.left, alignment);
         }
         else {
-            root.right = insert(root.right, interval);
+            root.right = insert(root.right, alignment);
         }
 
 
@@ -61,8 +61,8 @@ public class IntervalTree {
         }
 
 
-        if (root.max < interval.qend()) {
-            root.max = interval.qend();
+        if (root.max < alignment.qend()) {
+            root.max = alignment.qend();
         }
 
         return root;
@@ -89,8 +89,8 @@ public class IntervalTree {
     /**
      * check if i2 is contained in i1
      *
-     * @param i1 Wrapping interval
-     * @param i2 included interval
+     * @param i1 Wrapping alignment
+     * @param i2 included alignment
      * @return boolean if i2 is contained in i1
      */
 
@@ -130,7 +130,7 @@ public class IntervalTree {
      * depth first traversal of the tree
      * @param node root node
      * @param traversal acc list for the traversal
-     * @return arraylist of the interval nodes
+     * @return arraylist of the alignment nodes
      */
     private ArrayList<IntervalNode> depthFirstTraversal( IntervalNode node, ArrayList<IntervalNode> traversal) {
         if (node == null) {

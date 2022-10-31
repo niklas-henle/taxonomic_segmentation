@@ -4,7 +4,6 @@ import models.records.Alignment;
 import models.records.Tuple;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static main.Main.*;
 
@@ -19,39 +18,36 @@ public class Segmentation {
         int maxEnd = tree.getMaxEndValue();
         ArrayList<Alignment>[] tabs = new ArrayList[maxEnd + 1];
         for (IntervalNode n : nodes) {
-            for(int i=n.interval.qstart(); i < n.interval.qend()+1; i++) {
+            for(int i=n.alignment.qstart(); i < n.alignment.qend()+1; i++) {
                 if (tabs[i] != null ) {
-                    tabs[i].add(n.interval);
+                    tabs[i].add(n.alignment);
                 }
                 else {
-                    tabs[i] = new ArrayList<>(List.of(n.interval));
+                    tabs[i] = new ArrayList<>(List.of(n.alignment));
                 }
             }
         }
 
-        ArrayList<ArrayList<Alignment>> tmp =  new ArrayList<>(Arrays.asList(tabs));
-        tmp.removeAll(Collections.singleton(null));
-        tabs = tmp.toArray(new ArrayList[0]);
+        ArrayList<ArrayList<Alignment>> tabsList =  new ArrayList<>(Arrays.asList(tabs));
+        tabsList.removeAll(Collections.singleton(null));
         List<ArrayList<Alignment>> list = new ArrayList<>();
-        for (int i = 0; i < tabs.length; i++) {
+        for (int i = 0; i < tabsList.size(); i++) {
             if (i == 0) {
-                list.add(tabs[i]);
+                list.add(tabsList.get(i));
             }
-            else if (tabs[i] != null  && !tabs[i-1].equals(tabs[i])){
-                list.add(tabs[i]);
+            else if (tabsList.get(i) != null  && !tabsList.get(i-1).equals(tabsList.get(i))){
+                list.add(tabsList.get(i));
             }
         }
-        tabs = list.toArray(new ArrayList[0]);
 
-        ArrayList<ArrayList<Alignment>> ret = new ArrayList<>(Arrays.asList(tabs));
-        ret.removeAll(Collections.singleton(null));
+        list.removeAll(Collections.singleton(null));
 
         long endTime = System.currentTimeMillis();
 
         long timeElapsed = endTime - startTime;
         System.out.println("Took " + timeElapsed + " ms");
 
-        return ret;
+        return new ArrayList<>(list);
 
 
     }
@@ -91,9 +87,7 @@ public class Segmentation {
             if (i < alignments.size()-1) {
                 nextStart = getNextStartFromList(M, (ArrayList<Alignment>) alignments.get(i + 1).clone());
             }
-            if (i < alignments.size()-1) {
-                nextStart = getNextStartFromList(M, (ArrayList<Alignment>) alignments.get(i + 1).clone());
-            }
+
             if (i > 1) {
                 thisStart = eventIndexes[i-1];
             }

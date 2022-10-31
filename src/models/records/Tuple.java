@@ -1,5 +1,3 @@
 package models.records;
 
-public record Tuple(Alignment alignment, float[] score) {
-
-}
+public record Tuple(Alignment alignment, float[] score) { }

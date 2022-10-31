@@ -3,16 +3,16 @@ package models;
 import models.records.Alignment;
 
 public class IntervalNode {
-    Alignment interval;
+    Alignment alignment;
     int max, height;
     IntervalNode left, right;
 
-    public IntervalNode(Alignment interval) {
-        this.max = interval.qend();
-        this.interval = interval;
+    public IntervalNode(Alignment alignment) {
+        this.max = alignment.qend();
+        this.alignment = alignment;
     }
     public Alignment getInterval() {
-        return interval;
+        return alignment;
     }
 
 }
