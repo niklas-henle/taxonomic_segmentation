@@ -6,13 +6,6 @@ import models.records.Alignment;
 import java.util.ArrayList;
 
 public class IntervalTree {
-    public IntervalNode getRoot() {
-        return root;
-    }
-
-    public void setRoot(IntervalNode root) {
-        this.root = root;
-    }
 
     IntervalNode root;
 

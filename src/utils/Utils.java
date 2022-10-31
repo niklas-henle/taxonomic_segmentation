@@ -2,7 +2,6 @@ package utils;
 
 import models.records.Alignment;
 import models.IntervalTree;
-import models.TSSeq;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -10,19 +9,27 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Utils {
 
-    public static IntervalTree buildTreeFromBlastTab(ArrayList<String[]> tab) {
+    public static IntervalTree buildTreeFromBlastTab(ArrayList<Alignment> alignments) {
+        System.out.println("==========================================================");
+        System.out.println("Starting to build Tree from BlastTab ");
+        long startTime = System.currentTimeMillis();
         IntervalTree tree = new IntervalTree();
-
-        for (String[] row: tab) {
-            Alignment alignment = new Alignment(row[1], Integer.parseInt(row[8]), Integer.parseInt(row[9]),
-                    Float.parseFloat(row[10]), Float.parseFloat(row[11]));
-            tree.addNode(alignment);
-
+        for (Alignment a: alignments
+             ) {
+            tree.addNode(a);
         }
+
+        long endTime = System.currentTimeMillis();
+
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
         return tree;
 
     }
@@ -33,34 +40,41 @@ public class Utils {
      * @return return Hashmap of Seqid, TSSeq
      * @throws IOException throws IOException
      */
-    public static TSSeq fastAParser(String path) throws IOException {
+    public static HashMap<String, String> fastAParser(String path) throws IOException {
+        System.out.println("==========================================================");
+        System.out.println("Starting to parse the .fasta file ");
+        long startTime = System.currentTimeMillis();
 
         BufferedReader reader = new BufferedReader(new FileReader(path));
         String line = reader.readLine();
-        TSSeq currentTSSeq = null;
+        HashMap<String, String> reads = new HashMap<>();
         StringBuilder currentSeq = new StringBuilder();
 
+        String currentReadId = line.split(">")[1];
+        line = reader.readLine();
         while(line != null) {
             if (line.startsWith(">")) {
-
-                if (currentTSSeq != null) {
-                    currentTSSeq.setSeq(currentSeq.toString());
-                    return currentTSSeq;
+                String readId = line.split(">")[1];
+                if (!currentReadId.equals(readId)) {
+                    reads.put(currentReadId, currentSeq.toString());
+                    currentReadId = readId;
+                    currentSeq = new StringBuilder();
                 }
-                currentTSSeq = new TSSeq(line.split(">")[1]);
-                currentSeq = new StringBuilder();
             }
             else {
                 currentSeq.append(line);
             }
             line = reader.readLine();
         }
+        reads.put(currentReadId, currentSeq.toString());
 
-        if (currentTSSeq != null) {
-            currentTSSeq.setSeq(currentSeq.toString());
-        }
+        long endTime = System.currentTimeMillis();
 
-        return currentTSSeq;
+        long timeElapsed = endTime - startTime;
+
+        System.out.println("Took " + timeElapsed + " ms");
+
+        return reads;
     }
 
     /**
@@ -70,16 +84,29 @@ public class Utils {
      * <a href="https://www.metagenomics.wiki/tools/blast/blastn-output-format-6"></a>
      * @throws IOException throws exception
      */
-    public static ArrayList<String[]> blastTabParser(String path) throws IOException {
+    public static HashMap<String, ArrayList<Alignment>> blastTabParser(String path) throws IOException {
 
-        ArrayList<String[]> fileContent = new ArrayList<>();
+        System.out.println("==========================================================");
+        System.out.println("Starting to parse Blasttab ");
+        long startTime = System.currentTimeMillis();
+
+        HashMap<String, ArrayList<Alignment>> fileContent = new HashMap<>();
         BufferedReader reader = new BufferedReader(new FileReader(path));
 
         String line = reader.readLine();
         while(line != null) {
-            fileContent.add(line.split("\t"));
+            String[] blast = line.split("\t");
+            fileContent.putIfAbsent(blast[0], new ArrayList<>());
+            fileContent.get(blast[0]).add(new Alignment(blast[0], blast[1], Math.min(Integer.parseInt(blast[6]),
+                    Integer.parseInt(blast[7])),Math.max(Integer.parseInt(blast[6]),
+                    Integer.parseInt(blast[7])), Float.parseFloat(blast[10]), Float.parseFloat(blast[11])));
             line = reader.readLine();
         }
+
+        long endTime = System.currentTimeMillis();
+
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
         return fileContent;
     }
 
@@ -108,7 +135,23 @@ public class Utils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         return tid;
+    }
+
+    /**
+     * check if the resultset contains the column label
+     * @param res ResultSet
+     * @param label Label
+     * @return true/false
+     */
+    public static boolean hasColumn(ResultSet res, String label) {
+        try {
+            res.findColumn(label);
+            return res.getString(label) != null;
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
 }
