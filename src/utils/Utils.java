@@ -3,12 +3,7 @@ package utils;
 import models.records.Alignment;
 import models.IntervalTree;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -84,7 +79,7 @@ public class Utils {
      * <a href="https://www.metagenomics.wiki/tools/blast/blastn-output-format-6"></a>
      * @throws IOException throws exception
      */
-    public static HashMap<String, ArrayList<Alignment>> blastTabParser(String path) throws IOException {
+    public static HashMap<String, ArrayList<Alignment>> blastTabParser(String path, DatabaseConnector db) throws IOException {
 
         System.out.println("==========================================================");
         System.out.println("Starting to parse Blasttab ");
@@ -96,47 +91,28 @@ public class Utils {
         String line = reader.readLine();
         while(line != null) {
             String[] blast = line.split("\t");
+            String id = blast[1];
+            if (db != null) {
+                id = db.queryAccessionNumber(id);
+                if (id == null) {
+                    line = reader.readLine();
+                    continue;
+                }
+            }
             fileContent.putIfAbsent(blast[0], new ArrayList<>());
-            fileContent.get(blast[0]).add(new Alignment(blast[0], blast[1], Math.min(Integer.parseInt(blast[6]),
+            fileContent.get(blast[0]).add(new Alignment(blast[0], id, Math.min(Integer.parseInt(blast[6]),
                     Integer.parseInt(blast[7])),Math.max(Integer.parseInt(blast[6]),
                     Integer.parseInt(blast[7])), Float.parseFloat(blast[10]), Float.parseFloat(blast[11])));
             line = reader.readLine();
         }
-
+        if (db != null) {
+            db.closeConnection();
+        }
         long endTime = System.currentTimeMillis();
 
         long timeElapsed = endTime - startTime;
         System.out.println("Took " + timeElapsed + " ms");
         return fileContent;
-    }
-
-    /**
-     * Use the taxonomy id to retrieve the scientific name.
-     * @param tid taxonomy id
-     * @return scientific name of the tid associated organism
-     */
-    public static String getTaxonomyFromTid(String tid) {
-        try {
-            URL url = new URL(String.format("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=%s" +
-                            "&retmode=json",
-                    tid));
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Content-Type", "application/json");
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-            System.out.println(content);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return tid;
     }
 
     /**
@@ -152,6 +128,75 @@ public class Utils {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    /**
+     * read in the given mapping file as a HashMap
+     * @param path path to the mapping file
+     * @param depth one of "domain", "phylum", "class", "family", "order", "genus", "species"
+     * @return Hashmap with the Accession as key and the GTDB taxonomy as value
+     * @throws IOException
+     */
+    public static HashMap<String, String> readInTaxonmicMap(String path, String depth) throws IOException {
+        System.out.println("==========================================================");
+        System.out.println("Starting to parse Mapping file ");
+        long startTime = System.currentTimeMillis();
+        String prefix = "d__";
+        switch(depth.toLowerCase()) {
+            case "domain": prefix = "d__"; break;
+            case "phylum": prefix = "p__"; break;
+            case "class": prefix = "c__"; break;
+            case "order": prefix = "o__"; break;
+            case "family": prefix = "f__"; break;
+            case "genus": prefix = "g__"; break;
+            case "species": prefix = "s__"; break;
+        }
+
+        HashMap<String, String> fileContent = new HashMap<>();
+        BufferedReader reader = new BufferedReader(new FileReader(path));
+
+        String line = reader.readLine();
+        while(line != null) {
+            String[] entry = line.split("\t");
+            fileContent.put(entry[0].split("\\.")[0], entry[1].split(prefix)[1].split(";")[0]);
+            line = reader.readLine();
+        }
+
+        long endTime = System.currentTimeMillis();
+
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
+        return fileContent;
+    }
+
+    /**
+     * Read the given mapping file as Hashmap
+     * @param path path to the mapping file
+     * @return Hashmap containing the GTDB identifier as Keys and the Accession as values.
+     * @throws IOException
+     */
+    public static HashMap<String, String> readInGtdbMap(String path) throws IOException {
+        System.out.println("==========================================================");
+        System.out.println("Starting to parse Mapping file ");
+        long startTime = System.currentTimeMillis();
+
+        HashMap<String, String> fileContent = new HashMap<>();
+        BufferedReader reader = new BufferedReader(new FileReader(path));
+
+        String line = reader.readLine();
+        while(line != null) {
+            String[] entry = line.split("\t");
+            if (entry.length >= 5){
+                fileContent.put(entry[0], entry[4].split("\"")[1]);
+            }
+            line = reader.readLine();
+        }
+
+        long endTime = System.currentTimeMillis();
+
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
+        return fileContent;
     }
 
 }

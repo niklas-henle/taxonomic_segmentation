@@ -129,6 +129,9 @@ public class Segmentation {
         if (newStarts.size() == 0){
             ArrayList<Alignment> newEnds = (ArrayList<Alignment>) current.clone();
             newEnds.removeAll(next);
+            if (newEnds.size() == 0) {
+                return next.get(0).qstart();
+            }
             return  newEnds.get(0).qend();
         }
         return newStarts.get(0).qstart();
@@ -188,9 +191,9 @@ public class Segmentation {
             return match * length;
         }
         else {
-            if (previousScore - mismatch > previousScore - gapPenalty*gapLength) {
+            if (previousScore -mismatch * length > previousScore - gapPenalty*gapLength) {
                 gapLength = 0;
-                return -mismatch;
+                return -mismatch * length;
             } else {
 
                 float pen = gapPenalty * gapLength;
