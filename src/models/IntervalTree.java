@@ -31,9 +31,9 @@ public class IntervalTree {
             return new IntervalNode(alignment);
         }
 
-        int lowRoot = root.alignment.qend();
+        int lowRoot = root.alignment.qstart();
 
-        if (alignment.qend() < lowRoot) {
+        if (alignment.qstart() < lowRoot) {
             root.left = insert(root.left, alignment);
         }
         else {
@@ -60,10 +60,7 @@ public class IntervalTree {
             root = rotateLeft(root);
         }
 
-
-        if (root.max < alignment.qend()) {
-            root.max = alignment.qend();
-        }
+        root.max = alignment.qend() > root.max? alignment.qend(): root.max;
 
         return root;
     }
@@ -72,32 +69,6 @@ public class IntervalTree {
         return node == null ? -1 : node.height;
     }
 
-    /**
-     * Check if i1 and i2 intersect with one another
-     *
-     * @param i1 IntervalNode one
-     * @param i2 IntervalNode two
-     * @return boolean concerning the intersection
-     */
-    public boolean intersectingNode(IntervalNode i1, IntervalNode i2) {
-        return (i1.getInterval().qstart() < i2.getInterval().qstart()) &&
-                (i1.getInterval().qend() < i2.getInterval().qend()) ||
-                (i2.getInterval().qstart() < i1.getInterval().qstart()) &&
-                        (i2.getInterval().qend() < i1.getInterval().qend());
-    }
-
-    /**
-     * check if i2 is contained in i1
-     *
-     * @param i1 Wrapping alignment
-     * @param i2 included alignment
-     * @return boolean if i2 is contained in i1
-     */
-
-    public boolean containingNode(IntervalNode i1, IntervalNode i2) {
-        return (i1.getInterval().qstart() < i2.getInterval().qstart()) &&
-                (i1.getInterval().qend() > i2.getInterval().qend());
-    }
 
     IntervalNode rotateRight(IntervalNode node) {
         IntervalNode leftChild = node.left;
@@ -144,7 +115,7 @@ public class IntervalTree {
 
     }
 
-    public int getMaxEndValue() {
+    public int getMaxValue() {
        return getMaxEndValue(this.root);
     }
 
@@ -156,4 +127,66 @@ public class IntervalTree {
 
         return getMaxEndValue(root.right);
     }
+
+    public int getMinValue() {
+        return getMinValue(this.root);
+    }
+
+    private int getMinValue(IntervalNode root) {
+
+        if(root.left == null) {
+            return root.getInterval().qstart();
+        }
+
+        return getMinValue(root.left);
+    }
+
+    public ArrayList<Alignment> getIntervalsIncludingFromRoot(int index) {
+        return getIntervalsIncluding(this.root, index, new ArrayList<>());
+    }
+
+    private ArrayList<Alignment> getIntervalsIncluding(IntervalNode node, int index, ArrayList<Alignment> alignments) {
+
+        if (node == null) {
+            return alignments;
+        }
+
+        if (node.min > index) {
+            return getIntervalsIncluding(node.left, index, alignments);
+        }
+
+        if (node.getInterval().contains(index) && !alignments.contains(node.getInterval())) {
+            alignments.add(node.getInterval());
+        }
+
+        getIntervalsIncluding(node.left, index, alignments);
+        getIntervalsIncluding(node.right,index, alignments);
+        return alignments;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

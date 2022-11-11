@@ -13,30 +13,28 @@ public class Segmentation {
         System.out.println("==========================================================");
         System.out.println("Starting to generate computation Table");
         long startTime = System.currentTimeMillis();
+        int maxEnd = tree.getMaxValue();
+        int minValue = tree.getMinValue();
 
-        ArrayList<IntervalNode> nodes = tree.traversal();
-        int maxEnd = tree.getMaxEndValue();
-        ArrayList<Alignment>[] tabs = new ArrayList[maxEnd + 1];
-        for (IntervalNode n : nodes) {
-            for(int i=n.alignment.qstart(); i < n.alignment.qend()+1; i++) {
-                if (tabs[i] != null ) {
-                    tabs[i].add(n.alignment);
-                }
-                else {
-                    tabs[i] = new ArrayList<>(List.of(n.alignment));
-                }
+        ArrayList<ArrayList<Alignment>> tabs = new ArrayList<>();
+
+        for(int i = minValue; i < maxEnd+1; i++) {
+            ArrayList<Alignment> alignmentsIncluding = tree.getIntervalsIncludingFromRoot(i);
+            if (i > 32000) {
+                System.out.println(alignmentsIncluding);
             }
+            tabs.add(alignmentsIncluding.size() != 0 ? alignmentsIncluding: null);
         }
 
-        ArrayList<ArrayList<Alignment>> tabsList =  new ArrayList<>(Arrays.asList(tabs));
-        tabsList.removeAll(Collections.singleton(null));
+        tabs.removeAll(Collections.singleton(null));
         List<ArrayList<Alignment>> list = new ArrayList<>();
-        for (int i = 0; i < tabsList.size(); i++) {
+        for (int i = 0; i < tabs.size(); i++) {
             if (i == 0) {
-                list.add(tabsList.get(i));
+                list.add(tabs.get(i));
             }
-            else if (tabsList.get(i) != null  && !tabsList.get(i-1).equals(tabsList.get(i))){
-                list.add(tabsList.get(i));
+            else if (tabs.get(i) != null  && (hasDifference(tabs.get(i-1), tabs.get(i))
+                    || hasDifference(tabs.get(i), tabs.get(i-1)))){
+                list.add(tabs.get(i));
             }
         }
 
@@ -123,21 +121,6 @@ public class Segmentation {
         return dp;
     }
 
-    private int getNextStartFromList(ArrayList<Alignment> current ,ArrayList<Alignment> next) {
-        ArrayList<Alignment> newStarts = (ArrayList<Alignment>) next.clone();
-        newStarts.removeAll(current);
-        if (newStarts.size() == 0){
-            ArrayList<Alignment> newEnds = (ArrayList<Alignment>) current.clone();
-            newEnds.removeAll(next);
-            if (newEnds.size() == 0) {
-                return next.get(0).qstart();
-            }
-            return  newEnds.get(0).qend();
-        }
-        return newStarts.get(0).qstart();
-    }
-
-
     public ArrayList<Alignment> traceback(HashMap<String, Tuple> matrix) {
 
         System.out.println("==========================================================");
@@ -202,6 +185,26 @@ public class Segmentation {
             }
         }
     }
+
+    private boolean hasDifference(ArrayList<Alignment> a ,ArrayList<Alignment> b){
+        ArrayList<Alignment> a_clone = (ArrayList<Alignment>) a.clone();
+        a_clone.removeAll(b);
+        return a_clone.size() != 0;
+
+    }
+
+    private int getNextStartFromList(ArrayList<Alignment> current ,ArrayList<Alignment> next) {
+        ArrayList<Alignment> newStarts = (ArrayList<Alignment>) next.clone();
+        if (hasDifference(newStarts, current)){
+            ArrayList<Alignment> newEnds = (ArrayList<Alignment>) current.clone();
+            if (hasDifference(newEnds, next)) {
+                return next.get(0).qstart();
+            }
+            return  newEnds.get(0).qend();
+        }
+        return newStarts.get(0).qstart();
+    }
+
 
 }
 

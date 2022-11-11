@@ -24,5 +24,9 @@ public record Alignment(String readId, String sseqid, int qstart, int qend, floa
         return ((Alignment) obj).sseqid.equals(this.sseqid);
     }
 
+    public boolean contains(int i) {
+        return i >= qstart && i <= qend;
+    }
+
 }
 

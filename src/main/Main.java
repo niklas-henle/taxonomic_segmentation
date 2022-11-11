@@ -43,12 +43,12 @@ public class Main {
 
         Option matchF = new Option("m", "match", true, "Matching score");
 
-        Option mismatchF = new Option("n", "mismatch", true, "Mismatch penalty");
+        Option switchF = new Option("s", "switch penalty ", true, "Mismatch penalty");
         Option gapF = new Option("g", "gap", true, "gap penalty");
         Option rankF = new Option("r", "rank", true, "Alignment Rank");
 
         flags.addOption(matchF);
-        flags.addOption(mismatchF);
+        flags.addOption(switchF);
         flags.addOption(gapF);
         flags.addOption(rankF);
         flags.addOption(output);
@@ -59,11 +59,11 @@ public class Main {
             CommandLine cmd = parser.parse(flags, args);
 
             match = Integer.parseInt(cmd.getOptionValue(matchF, String.valueOf(match)));
-            mismatch = Integer.parseInt(cmd.getOptionValue(mismatchF, String.valueOf(mismatch)));
+            mismatch = Integer.parseInt(cmd.getOptionValue(switchF, String.valueOf(mismatch)));
             gapPenalty = Integer.parseInt(cmd.getOptionValue(gapF, String.valueOf(gapPenalty)));
             rank = cmd.getOptionValue(rankF, rank);
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue("outputfile", "taxonmoic_segmentation.txt")));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue("outputfile", "taxonomic_segmentation.txt")));
             HashMap<String, ArrayList<Alignment>> blastTab;
 
             if (cmd.getOptionValue("gtdbMappingFile") != null
