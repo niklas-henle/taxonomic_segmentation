@@ -18,7 +18,8 @@ public class Main {
     public static int match = 3;
     public static int mismatch = 4;
     public static int gapPenalty = 1;
-    public static int gapLength = 0;
+    public static int gapOpen = 2;
+    public static HashMap<String, Integer> gapLength = new HashMap<>();
     public static String rank = "Genus";
     public static void main(String[] args) {
 
@@ -30,6 +31,7 @@ public class Main {
         Option taxa = new Option("t", "taxonomyMap", true, "taxonomy map");
         Option gtdb = new Option("gtdb", "gtdbMappingFile", true, "gtdb mapping file");
         Option output = new Option ("o", "ouputfile", true, "Path to output file");
+        Option displayRead = new Option ("dr", "displayRead", false, "Display reads in output");
         fastA.setRequired(true);
         flags.addOption(fastA);
 
@@ -39,6 +41,7 @@ public class Main {
         flags.addOption(database);
         flags.addOption(taxa);
         flags.addOption(gtdb);
+        flags.addOption(displayRead);
 
 
         Option matchF = new Option("m", "match", true, "Matching score");
@@ -82,8 +85,9 @@ public class Main {
             HashMap<String, String> reads = Utils.fastAParser(cmd.getOptionValue(fastA));
 
             for ( ArrayList<Alignment> blast: blastTab.values()) {
+                String currentId = blast.get(0).readId();
                 System.out.println("==========================================================");
-                System.out.println("Read ID: " + blast.get(0).readId());
+                System.out.println("Read ID: " + currentId);
                 IntervalTree tree = Utils.buildTreeFromBlastTab(blast);
 
                 Segmentation seg = new Segmentation();
@@ -91,46 +95,8 @@ public class Main {
                 HashMap<String, Tuple> dp = seg.generateDPTable(tab);
                 ArrayList<Alignment> tb = seg.traceback(dp);
                 Collections.reverse(tb);
-                Alignment currentTbAl = tb.get(0);
 
-                for (int i = 0; i < tb.size(); i++){
-
-                            System.out.println("=======");
-                            System.out.println(tb.get(i).sseqid());
-                            System.out.println("Start :" + Math.min(tb.get(i).qstart(), seg.eventIndexes[i]));
-                            System.out.println("End :" + (i == tb.size()-1 ? tb.get(i).qend():Math.max(currentTbAl.qend(), seg.eventIndexes[i+1])));
-                            currentTbAl = tb.get(i);
-
-                }
-                String currentRead = reads.get(blast.get(0).readId());
-
-                writer.write("==========================================================\n");
-                writer.write(args[0]);
-                writer.write("\n");
-                writer.write("Read ID: " + blast.get(0).readId());
-                writer.write("\n");
-                writer.write("==========================================================\n");
-
-                System.out.println("==========================================================");
-                for (int i = 0; i < tb.size(); i++){
-                    writer.write("=======");
-                    writer.write("\n");
-                    if (i == 0){
-                        writer.write(tb.get(i).sseqid() + " starts at " + tb.get(i).qstart());
-                        writer.write("\n");
-                        writer.write(currentRead.substring(tb.get(i).qstart()-1, seg.eventIndexes[i]-2));
-                    } else {
-                        writer.write(tb.get(i).sseqid() + " starts at " + seg.eventIndexes[i] + "\n");
-                        if (i == tb.size()) {
-                            writer.write(currentRead.substring(seg.eventIndexes[i]-1, currentRead.length()-1));
-                            writer.write("Ends at " + currentRead.length() +"\n");
-                        } else {
-                            writer.write(currentRead.substring(seg.eventIndexes[i]-1, seg.eventIndexes[i+1]-1));
-                        }
-                        writer.write("\n");
-                    }
-                }
-
+                generateOutput(Integer.parseInt(currentId), seg, tb, reads.get(currentId), writer, cmd.hasOption(displayRead));
 
             }
 
@@ -144,5 +110,58 @@ public class Main {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void generateOutput(int readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, BufferedWriter writer, boolean showRead) throws IOException {
+        System.out.println("Generating output for "+ readId);
+        System.out.println("==========================================================");
+        long startTime = System.currentTimeMillis();
+
+        writer.write("==========================================================\n");
+        writer.write("Read ID: " + readId);
+        writer.write("\n");
+        writer.write("==========================================================\n");
+
+        System.out.println("==========================================================");
+        Alignment previous = tb.get(0);
+        int prevStart = seg.eventIndexes[0];
+        for (int i = 0; i < tb.size(); i++){
+            if (i == 0) {
+                writer.write("\n");
+                writer.write(tb.get(i).sseqid() + " starts at " + seg.eventIndexes[i] + "\n");
+            }
+            else {
+                if(!previous.equals(tb.get(i))){
+                    writer.write("=======");
+                    writer.write("\n");
+                    writer.write(tb.get(i).sseqid() + " starts at " + seg.eventIndexes[i] + "\n");
+                    previous = tb.get(i);
+                    prevStart = seg.eventIndexes[i];
+                }
+                if(i < tb.size()-1  && !previous.equals(tb.get(i+1)) && showRead){
+
+                    writer.write(currentRead.substring(prevStart, seg.eventIndexes[i+1]-1));
+
+                    writer.write("\n");
+                }
+
+                if (i == tb.size()-1) {
+                    if (showRead) {
+                        writer.write(currentRead.substring(prevStart, currentRead.length() - 1));
+                        writer.write("\n");
+                    }
+                    writer.write("Ends at " + currentRead.length() +"\n");
+                }
+
+
+
+            }
+
+        }
+
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
+
     }
 }

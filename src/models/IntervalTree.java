@@ -61,7 +61,6 @@ public class IntervalTree {
         }
 
         root.max = alignment.qend() > root.max? alignment.qend(): root.max;
-
         return root;
     }
 
@@ -151,9 +150,6 @@ public class IntervalTree {
             return alignments;
         }
 
-        if (node.min > index) {
-            return getIntervalsIncluding(node.left, index, alignments);
-        }
 
         if (node.getInterval().contains(index) && !alignments.contains(node.getInterval())) {
             alignments.add(node.getInterval());
