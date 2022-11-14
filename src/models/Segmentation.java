@@ -9,34 +9,36 @@ import static main.Main.*;
 
 public class Segmentation {
     public int[] eventIndexes;
+    HashMap<String, Float> emission = new HashMap<>();
+
+    /**
+     * Generate the initial table used for the dynamic program.
+     * @param tree Alignment Interval tree
+     * @return Nested list of ArrayLists
+     */
     public ArrayList<ArrayList<Alignment>> generateTable(IntervalTree tree) {
         System.out.println("==========================================================");
         System.out.println("Starting to generate computation Table");
         long startTime = System.currentTimeMillis();
+        int maxEnd = tree.getMaxValue();
+        int minValue = tree.getMinValue();
 
-        ArrayList<IntervalNode> nodes = tree.traversal();
-        int maxEnd = tree.getMaxEndValue();
-        ArrayList<Alignment>[] tabs = new ArrayList[maxEnd + 1];
-        for (IntervalNode n : nodes) {
-            for(int i=n.alignment.qstart(); i < n.alignment.qend()+1; i++) {
-                if (tabs[i] != null ) {
-                    tabs[i].add(n.alignment);
-                }
-                else {
-                    tabs[i] = new ArrayList<>(List.of(n.alignment));
-                }
-            }
+        ArrayList<ArrayList<Alignment>> tabs = new ArrayList<>();
+
+        for(int i = minValue; i < maxEnd+1; i++) {
+            ArrayList<Alignment> alignmentsIncluding = tree.getIntervalsIncludingFromRoot(i);
+            tabs.add(alignmentsIncluding.size() != 0 ? alignmentsIncluding: null);
         }
 
-        ArrayList<ArrayList<Alignment>> tabsList =  new ArrayList<>(Arrays.asList(tabs));
-        tabsList.removeAll(Collections.singleton(null));
+        tabs.removeAll(Collections.singleton(null));
         List<ArrayList<Alignment>> list = new ArrayList<>();
-        for (int i = 0; i < tabsList.size(); i++) {
+        for (int i = 0; i < tabs.size(); i++) {
             if (i == 0) {
-                list.add(tabsList.get(i));
+                list.add(tabs.get(i));
             }
-            else if (tabsList.get(i) != null  && !tabsList.get(i-1).equals(tabsList.get(i))){
-                list.add(tabsList.get(i));
+            else if (tabs.get(i) != null  && (getDifference(tabs.get(i-1), tabs.get(i)).size() != 0
+                    || getDifference(tabs.get(i), tabs.get(i-1)).size() != 0)){
+                list.add(tabs.get(i));
             }
         }
 
@@ -52,13 +54,17 @@ public class Segmentation {
 
     }
 
+    /**
+     * Compute the scoring for the underlying matrix structure.
+     * @param alignments empty table
+     * @return Hashmap containing the taxonomic identifier as key and a Tuple as value.
+     */
     public HashMap<String, Tuple> generateDPTable(ArrayList<ArrayList<Alignment>> alignments) {
         System.out.println("==========================================================");
         System.out.println("Starting to generate Dynamic Table");
         long startTime = System.currentTimeMillis();
 
         HashMap<String, Tuple> dp = new HashMap<>();
-        HashMap<String, Float> emission = new HashMap<>();
 
         float [] init = new float[alignments.size()];
 
@@ -67,12 +73,8 @@ public class Segmentation {
              ) {
             for (Alignment a: al
                  ) {
-                if (emission.containsKey(a.sseqid())) {
-                    emission.put(a.sseqid(), emission.get(a.sseqid()) + 1f);
-                }
-                else {
-                    emission.put(a.sseqid(), 1f);
-                }
+                    emission.put(a.sseqid(), emission.containsKey(a.sseqid())? emission.get(a.sseqid()) + 1f: 1f);
+                    dp.put(a.sseqid(), new Tuple(a, init.clone()));
             }
         }
 
@@ -81,39 +83,33 @@ public class Segmentation {
 
         eventIndexes = new int[alignments.size()];
         for(int i = 0; i < alignments.size(); i++) {
-            ArrayList<Alignment> M = (ArrayList<Alignment>) alignments.get(i).clone();
-            int nextStart = M.get(0).qend();
-            int thisStart = M.get(0).qstart();
-            if (i < alignments.size()-1) {
-                nextStart = getNextStartFromList(M, (ArrayList<Alignment>) alignments.get(i + 1).clone());
-            }
+            ArrayList<Alignment> M = alignments.get(i);
+            int nextStart = i < alignments.size()-1? getNextStartFromList(M, (ArrayList<Alignment>) alignments.get(i + 1).clone()): M.get(0).qend();
+            int thisStart = i > 1? eventIndexes[i-1]: M.get(0).qstart();
 
-            if (i > 1) {
-                thisStart = eventIndexes[i-1];
-            }
             eventIndexes[i] = nextStart;
 
 
-            if (i > 0 ) {
-                M.addAll(alignments.get(i - 1));
-            }
 
-
-            for (Alignment alignment : M) {
-
-                // Initialise first column
+            for (Tuple v: dp.values()) {
+                Alignment alignment = v.alignment();
+                float score;
                 if (i == 0) {
-                    dp.put(alignment.sseqid(), new Tuple(alignment, init.clone()));
-                    continue;
+                    if (M.contains(alignment)) {
+                        score = emission.get(alignment.sseqid()) * match * (nextStart-thisStart);
+                    }
+                    else {
+                        score = emission.get(alignment.sseqid()) * -(gapOpenPenalty + gapPenalty * (nextStart-thisStart));
+                        gapLength.put(alignment.sseqid(), nextStart-thisStart);
+                    }
+
                 }
-                dp.putIfAbsent(alignment.sseqid(), new Tuple(alignment, init.clone()));
-
-                float vi = emission.get(alignment.sseqid()) * getMaxScore(alignments.get(i - 1), i - 1, dp, alignment, nextStart-thisStart);
-                float[] mScores = dp.get(alignment.sseqid()).score();
-                mScores[i] = vi;
-                dp.put(alignment.sseqid(), new Tuple(alignment, mScores));
-
+                else {
+                    score = emission.get(alignment.sseqid()) * getMaxScore(M, i - 1, dp, alignment, nextStart - thisStart);
+                }
+                dp.get(alignment.sseqid()).score()[i] = score;
             }
+
         }
 
         long endTime = System.currentTimeMillis();
@@ -123,21 +119,11 @@ public class Segmentation {
         return dp;
     }
 
-    private int getNextStartFromList(ArrayList<Alignment> current ,ArrayList<Alignment> next) {
-        ArrayList<Alignment> newStarts = (ArrayList<Alignment>) next.clone();
-        newStarts.removeAll(current);
-        if (newStarts.size() == 0){
-            ArrayList<Alignment> newEnds = (ArrayList<Alignment>) current.clone();
-            newEnds.removeAll(next);
-            if (newEnds.size() == 0) {
-                return next.get(0).qstart();
-            }
-            return  newEnds.get(0).qend();
-        }
-        return newStarts.get(0).qstart();
-    }
-
-
+    /**
+     * Copmute the traceback based on the computed scoring table
+     * @param matrix scoring table
+     * @return Traceback as list of alignments
+     */
     public ArrayList<Alignment> traceback(HashMap<String, Tuple> matrix) {
 
         System.out.println("==========================================================");
@@ -149,59 +135,135 @@ public class Segmentation {
         String[] keys = matrix.keySet().toArray(new String[0]);
 
         int endIndex = matrix_scores.get(0).length-1;
-
-
         Tuple maxTax = matrix.get(keys[0]);
-        float maxValue = 0;
+        float maxValue = matrix_scores.get(0)[endIndex];
+        int maxTaxInd = 0;
+        for(int i = 0; i < keys.length; i++) {
+            float curScore = matrix_scores.get(i)[endIndex];
+            if (maxValue < curScore) {
+                maxValue = curScore;
+                maxTax = matrix.get(keys[i]);
+                maxTaxInd = i;
+            }
+        }
 
         for (int i = endIndex; i >= 0; i--) {
-            for(int j = 0; j < matrix_scores.size() ; j++) {
-                if (maxValue <=  matrix_scores.get(j)[i]) {
-                    maxValue =  matrix_scores.get(j)[i];
-                    maxTax = matrix.get(keys[j]);
-                }
+            if(i == 0){
+                traceback.add(maxTax.alignment());
+                break;
             }
-            traceback.add(maxTax.alignment());
+            float c_value = matrix_scores.get(maxTaxInd)[i];
+            float n_value = matrix_scores.get(maxTaxInd)[i-1];
+            if (emission.get(maxTax.alignment().sseqid()) * (n_value + match*(eventIndexes[i]-eventIndexes[i-1])) != c_value){
+                for(int j = 0; j < matrix_scores.size(); j++) {
+                    if(emission.get(maxTax.alignment().sseqid()) * (matrix_scores.get(j)[i-1] - switchPenalty*(eventIndexes[i]-eventIndexes[i-1])) == c_value ){
+                        maxTaxInd = j;
+                        maxTax = matrix.get(keys[j]);
+                        break;
+                    }
+                }
+                traceback.add(maxTax.alignment());
+
+            }
+            else {
+                traceback.add(maxTax.alignment());
+            }
         }
 
         long endTime = System.currentTimeMillis();
-
         long timeElapsed = endTime - startTime;
         System.out.println("Took " + timeElapsed + " ms");
 
         return traceback;
     }
 
+    /**
+     * Get the max score from the different possible computations.
+     * @param Mi alignments present in the current event
+     * @param w previous index
+     * @param dp scoring table
+     * @param current current alignment
+     * @param length length of the event
+     * @return float of the maximal score achievable
+     */
     private float getMaxScore(ArrayList<Alignment> Mi, int w , HashMap<String, Tuple> dp, Alignment current, int length ) {
-        float max = 0;
+        float max = -Float.MAX_VALUE;
         for (Alignment a : Mi
              ) {
-            float previousScore = dp.get(a.sseqid()).score()[w];
-            float score = computeScore(a, current, previousScore, length);
-            max = Math.max(max, previousScore + score);
+            float previousScore = dp.get(current.sseqid()).score()[w];
+            float switchScore = dp.get(a.sseqid()).score()[w];
+            float score = computeScore(a, current, previousScore, switchScore,length);
+            max = Math.max(max, score);
 
         }
         return max;
 
     }
 
-    private float computeScore(Alignment prev, Alignment current,  float previousScore, int length) {
+
+    /**
+     * Compute the score based on the three options
+     * - match
+     * - switch
+     * - gap elongation or start
+     * @param prev previous alignment
+     * @param current current alignment
+     * @param previousScore previous score
+     * @param switchScore score associated with the alignment present in the event and thus possible switch
+     * @param length length of the event
+     * @return float of the possible score
+     */
+    private float computeScore(Alignment prev, Alignment current,  float previousScore, float switchScore ,int length) {
+        int currentGapLength = gapLength.getOrDefault(current.sseqid(), 0);
         if (prev.equals(current)) {
-            gapLength = 0;
-            return match * length;
+            gapLength.put(current.sseqid(),0);
+            return previousScore + match * length;
         }
         else {
-            if (previousScore -mismatch * length > previousScore - gapPenalty*gapLength) {
-                gapLength = 0;
-                return -mismatch * length;
-            } else {
 
-                float pen = gapPenalty * gapLength;
-                gapLength += length;
-                return -pen;
+            float pen = currentGapLength == 0? gapOpenPenalty + gapPenalty * currentGapLength: gapPenalty * currentGapLength;
+
+            if (switchScore - switchPenalty * length > previousScore - pen) {
+                gapLength.put(current.sseqid(),0);
+                return switchScore-switchPenalty * length;
+            } else {
+                gapLength.put(current.sseqid(), currentGapLength + length);
+                return previousScore-pen;
             }
         }
     }
+
+    /**
+     * get the difference between two events
+     * @param a event1
+     * @param b event2
+     * @return list of differences
+     */
+    private ArrayList<Alignment> getDifference(ArrayList<Alignment> a ,ArrayList<Alignment> b){
+        ArrayList<Alignment> a_clone = (ArrayList<Alignment>) a.clone();
+        a_clone.removeAll(b);
+        return a_clone;
+
+    }
+
+    /**
+     * get the start value of the next event
+     * @param current current event
+     * @param next next event
+     * @return int start value of the next event
+     */
+    private int getNextStartFromList(ArrayList<Alignment> current ,ArrayList<Alignment> next) {
+        ArrayList<Alignment> newStarts = getDifference((ArrayList<Alignment>) next.clone(), current);
+        if (newStarts.size() == 0){
+            ArrayList<Alignment> newEnds = getDifference((ArrayList<Alignment>) current.clone(), next);
+            if (newEnds.size() == 0) {
+                return next.get(0).qstart();
+            }
+            return  newEnds.get(0).qend();
+        }
+        return newStarts.get(0).qstart();
+    }
+
 
 }
 

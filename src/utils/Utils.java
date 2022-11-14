@@ -11,6 +11,11 @@ import java.util.HashMap;
 
 public class Utils {
 
+    /**
+     * build the interval tree based on the alignments gathered from the blast file.
+     * @param alignments list of alignments from the blast file
+     * @return Interval tree with the alignments as nodes.
+     */
     public static IntervalTree buildTreeFromBlastTab(ArrayList<Alignment> alignments) {
         System.out.println("==========================================================");
         System.out.println("Starting to build Tree from BlastTab ");
@@ -141,16 +146,15 @@ public class Utils {
         System.out.println("==========================================================");
         System.out.println("Starting to parse Mapping file ");
         long startTime = System.currentTimeMillis();
-        String prefix = "d__";
-        switch(depth.toLowerCase()) {
-            case "domain": prefix = "d__"; break;
-            case "phylum": prefix = "p__"; break;
-            case "class": prefix = "c__"; break;
-            case "order": prefix = "o__"; break;
-            case "family": prefix = "f__"; break;
-            case "genus": prefix = "g__"; break;
-            case "species": prefix = "s__"; break;
-        }
+        String prefix = switch (depth.toLowerCase()) {
+            case "domain" -> "d__";
+            case "phylum" -> "p__";
+            case "class" -> "c__";
+            case "order" -> "o__";
+            case "family" -> "f__";
+            case "genus" -> "g__";
+            case "species" -> "s__";
+        };
 
         HashMap<String, String> fileContent = new HashMap<>();
         BufferedReader reader = new BufferedReader(new FileReader(path));
