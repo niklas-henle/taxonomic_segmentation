@@ -15,12 +15,16 @@ import java.util.HashMap;
 import org.apache.commons.cli.*;
 
 public class Main {
-    public static int match = 3;
-    public static int mismatch = 4;
+    public static int match = 5;
+    public static int switchPenalty = 8;
     public static int gapPenalty = 1;
     public static int gapOpen = 2;
     public static HashMap<String, Integer> gapLength = new HashMap<>();
     public static String rank = "Genus";
+    public static HashMap<String, ArrayList<Summary>> summaryMap = new HashMap<>();
+    private record Summary(int readId, Alignment a){}
+
+
     public static void main(String[] args) {
 
         Options flags  = new Options();
@@ -32,6 +36,9 @@ public class Main {
         Option gtdb = new Option("gtdb", "gtdbMappingFile", true, "gtdb mapping file");
         Option output = new Option ("o", "ouputfile", true, "Path to output file");
         Option displayRead = new Option ("dr", "displayRead", false, "Display reads in output");
+        Option summary = new Option ("summary", "summary", false, "Display reads in output");
+        Option yml = new Option("yml", "yml", false, "Write the input data into a yml file");
+
         fastA.setRequired(true);
         flags.addOption(fastA);
 
@@ -42,6 +49,8 @@ public class Main {
         flags.addOption(taxa);
         flags.addOption(gtdb);
         flags.addOption(displayRead);
+        flags.addOption(summary);
+        flags.addOption(yml);
 
 
         Option matchF = new Option("m", "match", true, "Matching score");
@@ -62,27 +71,30 @@ public class Main {
             CommandLine cmd = parser.parse(flags, args);
 
             match = Integer.parseInt(cmd.getOptionValue(matchF, String.valueOf(match)));
-            mismatch = Integer.parseInt(cmd.getOptionValue(switchF, String.valueOf(mismatch)));
+            switchPenalty = Integer.parseInt(cmd.getOptionValue(switchF, String.valueOf(switchPenalty)));
             gapPenalty = Integer.parseInt(cmd.getOptionValue(gapF, String.valueOf(gapPenalty)));
             rank = cmd.getOptionValue(rankF, rank);
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue("outputfile", "taxonomic_segmentation.txt")));
+            String filename = cmd.getOptionValue(output, "taxonomic_segmentation");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filename+".txt"));
             HashMap<String, ArrayList<Alignment>> blastTab;
 
-            if (cmd.getOptionValue("gtdbMappingFile") != null
-                    && cmd.getOptionValue("taxonomyMap") != null
-                    && cmd.getOptionValue(database) != null ){
+            if (cmd.getOptionValue(gtdb) != null
+                    && cmd.getOptionValue(taxa) != null
+                    && cmd.getOptionValue(database) != null ) {
 
                 blastTab = Utils.blastTabParser(cmd.getOptionValue(blastF),
                         new DatabaseConnector(cmd.getOptionValue(database),
-                                cmd.getOptionValue("gtdbMappingFile"),
-                                cmd.getOptionValue("taxonomyMap")));
+                                cmd.getOptionValue(gtdb),
+                                cmd.getOptionValue(taxa)));
             }
             else {
                 blastTab = Utils.blastTabParser(cmd.getOptionValue(blastF),null);
             }
 
             HashMap<String, String> reads = Utils.fastAParser(cmd.getOptionValue(fastA));
+
+
+            if (cmd.hasOption(yml)) writeBlastToYml(blastTab, filename+"_original");
 
             for ( ArrayList<Alignment> blast: blastTab.values()) {
                 String currentId = blast.get(0).readId();
@@ -96,11 +108,13 @@ public class Main {
                 ArrayList<Alignment> tb = seg.traceback(dp);
                 Collections.reverse(tb);
 
-                generateOutput(Integer.parseInt(currentId), seg, tb, reads.get(currentId), writer, cmd.hasOption(displayRead));
+                generateOutput(Integer.parseInt(currentId), seg, tb, reads.get(currentId), tree.getMaxValue(),writer, cmd.hasOption(displayRead));
 
             }
+            if (cmd.hasOption(summary)) generateSummary(filename, summaryMap);
 
             writer.close();
+
 
 
         } catch (IOException e) {
@@ -112,7 +126,24 @@ public class Main {
         }
     }
 
-    private static void generateOutput(int readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, BufferedWriter writer, boolean showRead) throws IOException {
+    private static void writeBlastToYml(HashMap<String, ArrayList<Alignment>> blastTab, String filename) throws IOException {
+        HashMap<String, ArrayList<Summary>> orginial = new HashMap<>();
+
+        for (ArrayList<Alignment> b: blastTab.values()
+             ) {
+            for (Alignment a: b
+                 ) {
+                orginial.putIfAbsent(a.sseqid(), new ArrayList<>());
+                orginial.get(a.sseqid()).add(new Summary(Integer.parseInt(a.readId()), a));
+            }
+        }
+
+        generateSummary(filename, orginial);
+
+    }
+
+
+    private static void generateOutput(int readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, int maxEnd, BufferedWriter writer, boolean showRead) throws IOException {
         System.out.println("Generating output for "+ readId);
         System.out.println("==========================================================");
         long startTime = System.currentTimeMillis();
@@ -138,19 +169,28 @@ public class Main {
                     previous = tb.get(i);
                     prevStart = seg.eventIndexes[i];
                 }
-                if(i < tb.size()-1  && !previous.equals(tb.get(i+1)) && showRead){
+                if(i < tb.size()-1  && !previous.equals(tb.get(i+1))){
+                    if(showRead) {
+                        writer.write(currentRead.substring(prevStart, seg.eventIndexes[i + 1] - 1));
 
-                    writer.write(currentRead.substring(prevStart, seg.eventIndexes[i+1]-1));
+                        writer.write("\n");
+                    }
+                     summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
+                     summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
+                             previous.sseqid(), prevStart, seg.eventIndexes[i+1]-1, 0,0 )));
 
-                    writer.write("\n");
                 }
 
                 if (i == tb.size()-1) {
                     if (showRead) {
-                        writer.write(currentRead.substring(prevStart, currentRead.length() - 1));
+                        writer.write(currentRead.substring(prevStart, maxEnd-1));
                         writer.write("\n");
                     }
-                    writer.write("Ends at " + currentRead.length() +"\n");
+                    summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
+                    summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
+                            previous.sseqid(), prevStart, maxEnd-1, 0,0 )));
+                    writer.write("Ends at " + (maxEnd-1) +"\n");
+                    writer.write("\n");
                 }
 
 
@@ -164,4 +204,31 @@ public class Main {
         System.out.println("Took " + timeElapsed + " ms");
 
     }
+
+    private static void generateSummary(String filename, HashMap<String, ArrayList<Summary>> summary) throws IOException {
+        System.out.println("Generating Summary");
+        System.out.println("==========================================================");
+        long startTime = System.currentTimeMillis();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(filename+"_summary.yml"));
+        for (String taxa: summary.keySet()
+             ) {
+            int lastReadId = 0;
+            ArrayList<Summary> taxSum = summary.get(taxa);
+            writer.write(taxa + ":\n" );
+            for (Summary sum: taxSum
+                 ) {
+                if(lastReadId != sum.readId) {
+                    writer.write("  " + sum.readId + ":\n");
+                }
+                writer.write("    [" + sum.a.qstart() + ":" +sum.a.qend()+"]\n");
+                lastReadId = sum.readId;
+            }
+
+        }
+        writer.close();
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
+        System.out.println("Took " + timeElapsed + " ms");
+    }
+
 }

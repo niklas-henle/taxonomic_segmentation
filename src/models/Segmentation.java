@@ -151,8 +151,9 @@ public class Segmentation {
         float max = -Float.MAX_VALUE;
         for (Alignment a : Mi
              ) {
-            float previousScore = dp.get(a.sseqid()).score()[w];
-            float score = computeScore(a, current, previousScore, length);
+            float previousScore = dp.get(current.sseqid()).score()[w];
+            float switchScore = dp.get(a.sseqid()).score()[w];
+            float score = computeScore(a, current, previousScore, switchScore,length);
             max = Math.max(max, previousScore + score);
 
         }
@@ -162,8 +163,7 @@ public class Segmentation {
 
 
 
-    private float computeScore(Alignment prev, Alignment current,  float previousScore, int length) {
-        int gapOpening = 2;
+    private float computeScore(Alignment prev, Alignment current,  float previousScore, float switchScore ,int length) {
         int currentGapLength = gapLength.containsKey(current.sseqid())? gapLength.get(current.sseqid()): 0;
         if (prev.equals(current)) {
             gapLength.put(current.sseqid(),0);
@@ -171,11 +171,11 @@ public class Segmentation {
         }
         else {
 
-            float pen = currentGapLength == 0? gapOpening + gapPenalty * currentGapLength: gapPenalty * currentGapLength;
+            float pen = currentGapLength == 0? gapOpen + gapPenalty * currentGapLength: gapPenalty * currentGapLength;
 
-            if (previousScore - mismatch * length > previousScore - pen) {
+            if (switchScore - switchPenalty * length > previousScore - pen) {
                 gapLength.put(current.sseqid(),0);
-                return -mismatch * length;
+                return -switchPenalty * length;
             } else {
                 gapLength.put(current.sseqid(), currentGapLength + length);
                 return -pen;
