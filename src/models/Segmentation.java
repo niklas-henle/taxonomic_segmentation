@@ -140,7 +140,7 @@ public class Segmentation {
             float n_value = matrix_scores.get(maxTaxInd)[i-1];
             if (emission.get(maxTax.alignment().sseqid()) * (n_value + match*(eventIndexes[i]-eventIndexes[i-1])) != c_value){
                 for(int j = 0; j < matrix_scores.size(); j++) {
-                    if(emission.get(keys[j]) * (matrix_scores.get(j)[i-1] - switchPenalty*(eventIndexes[i]-eventIndexes[i-1])) == c_value ){
+                    if(emission.get(maxTax.alignment().sseqid()) * (matrix_scores.get(j)[i-1] - switchPenalty*(eventIndexes[i]-eventIndexes[i-1])) == c_value ){
                         maxTaxInd = j;
                         maxTax = matrix.get(keys[j]);
                         break;

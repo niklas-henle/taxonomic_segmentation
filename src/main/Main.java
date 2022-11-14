@@ -22,7 +22,7 @@ public class Main {
     public static HashMap<String, Integer> gapLength = new HashMap<>();
     public static String rank = "Genus";
     public static HashMap<String, ArrayList<Summary>> summaryMap = new HashMap<>();
-    private record Summary(int readId, Alignment a){}
+    private record Summary(String readId, Alignment a){}
 
 
     public static void main(String[] args) {
@@ -111,7 +111,7 @@ public class Main {
                 ArrayList<Alignment> tb = seg.traceback(dp);
                 Collections.reverse(tb);
 
-                generateOutput(Integer.parseInt(currentId), seg, tb, reads.get(currentId), tree.getMaxValue(),writer, cmd.hasOption(displayRead));
+                generateOutput(currentId, seg, tb, reads.get(currentId), tree.getMaxValue(),writer, cmd.hasOption(displayRead));
 
             }
             if (cmd.hasOption(summary)) generateSummary(filename, summaryMap);
@@ -133,7 +133,7 @@ public class Main {
             for (Alignment a: b
                  ) {
                 orginial.putIfAbsent(a.sseqid(), new ArrayList<>());
-                orginial.get(a.sseqid()).add(new Summary(Integer.parseInt(a.readId()), a));
+                orginial.get(a.sseqid()).add(new Summary(a.readId(), a));
             }
         }
 
@@ -142,7 +142,7 @@ public class Main {
     }
 
 
-    private static void generateOutput(int readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, int maxEnd, BufferedWriter writer, boolean showRead) throws IOException {
+    private static void generateOutput(String readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, int maxEnd, BufferedWriter writer, boolean showRead) throws IOException {
         System.out.println("Generating output for "+ readId);
         System.out.println("==========================================================");
         long startTime = System.currentTimeMillis();
@@ -177,7 +177,7 @@ public class Main {
                         writer.write("\n");
                     }
                     summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
-                    summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
+                    summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(readId,
                             previous.sseqid(), prevStart, seg.eventIndexes[i + 1] - 1, 0, 0)));
 
                 }
@@ -189,7 +189,7 @@ public class Main {
                     writer.write("\n");
                 }
                 summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
-                summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
+                summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(readId,
                         previous.sseqid(), prevStart, maxEnd-1, 0,0 )));
                 writer.write("Ends at " + (maxEnd-1) +"\n");
                 writer.write("\n");
@@ -210,12 +210,12 @@ public class Main {
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename+"_summary.yml"));
         for (String taxa: summary.keySet()
              ) {
-            int lastReadId = 0;
+            String lastReadId = "";
             ArrayList<Summary> taxSum = summary.get(taxa);
             writer.write(taxa + ":\n" );
             for (Summary sum: taxSum
                  ) {
-                if(lastReadId != sum.readId) {
+                if(!lastReadId.equals(sum.readId)) {
                     writer.write("  " + sum.readId + ":\n");
                 }
                 writer.write("    [" + sum.a.qstart() + ":" +sum.a.qend()+"]\n");
