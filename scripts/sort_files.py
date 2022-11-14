@@ -1,4 +1,3 @@
-from ctypes import alignment
 from subprocess import *
 import os
 import shutil
@@ -25,13 +24,7 @@ for file in os.listdir(alignments):
         taxa = "-".join(taxa.split("-")[1:])
         aligns.append(taxa)    
 
-#print(bins)
-#print(aligns)
-
-
 diff = [x for x in aligns if x not in bins]
-print(len(diff))
-
 
 for file in os.listdir(alignments):
 

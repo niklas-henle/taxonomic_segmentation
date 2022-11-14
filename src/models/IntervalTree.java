@@ -146,7 +146,7 @@ public class IntervalTree {
 
     private ArrayList<Alignment> getIntervalsIncluding(IntervalNode node, int index, ArrayList<Alignment> alignments) {
 
-        if (node == null) {
+        if (node == null || node.max < index) {
             return alignments;
         }
 
@@ -155,8 +155,11 @@ public class IntervalTree {
             alignments.add(node.getInterval());
         }
 
-        getIntervalsIncluding(node.left, index, alignments);
-        getIntervalsIncluding(node.right,index, alignments);
+        if (node.alignment.qstart() < index) {
+            alignments = getIntervalsIncluding(node.right, index, alignments);
+        }
+        alignments = getIntervalsIncluding(node.left, index, alignments);
+
         return alignments;
     }
 }

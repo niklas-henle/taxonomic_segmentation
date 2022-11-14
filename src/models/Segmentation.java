@@ -88,7 +88,7 @@ public class Segmentation {
                         score = emission.get(alignment.sseqid()) * match * (nextStart-thisStart);
                     }
                     else {
-                        score = emission.get(alignment.sseqid()) * -(gapOpen + gapPenalty * (nextStart-thisStart));
+                        score = emission.get(alignment.sseqid()) * -(gapOpenPenalty + gapPenalty * (nextStart-thisStart));
                         gapLength.put(alignment.sseqid(), nextStart-thisStart);
                     }
 
@@ -171,7 +171,7 @@ public class Segmentation {
         }
         else {
 
-            float pen = currentGapLength == 0? gapOpen + gapPenalty * currentGapLength: gapPenalty * currentGapLength;
+            float pen = currentGapLength == 0? gapOpenPenalty + gapPenalty * currentGapLength: gapPenalty * currentGapLength;
 
             if (switchScore - switchPenalty * length > previousScore - pen) {
                 gapLength.put(current.sseqid(),0);

@@ -15,10 +15,10 @@ import java.util.HashMap;
 import org.apache.commons.cli.*;
 
 public class Main {
-    public static int match = 5;
-    public static int switchPenalty = 8;
+    public static int match = 3;
+    public static int switchPenalty = 5;
     public static int gapPenalty = 1;
-    public static int gapOpen = 2;
+    public static int gapOpenPenalty = 2;
     public static HashMap<String, Integer> gapLength = new HashMap<>();
     public static String rank = "Genus";
     public static HashMap<String, ArrayList<Summary>> summaryMap = new HashMap<>();
@@ -58,12 +58,14 @@ public class Main {
         Option switchF = new Option("s", "switch penalty ", true, "Mismatch penalty");
         Option gapF = new Option("g", "gap", true, "gap penalty");
         Option rankF = new Option("r", "rank", true, "Alignment Rank");
+        Option gapOpen = new Option("go", "gapOpenPenalty", true, "gap opening penalty");
 
         flags.addOption(matchF);
         flags.addOption(switchF);
         flags.addOption(gapF);
         flags.addOption(rankF);
-        flags.addOption(output);
+        flags.addOption(output);;
+        flags.addOption(gapOpen);
 
         CommandLineParser parser = new DefaultParser();
 
@@ -74,6 +76,7 @@ public class Main {
             switchPenalty = Integer.parseInt(cmd.getOptionValue(switchF, String.valueOf(switchPenalty)));
             gapPenalty = Integer.parseInt(cmd.getOptionValue(gapF, String.valueOf(gapPenalty)));
             rank = cmd.getOptionValue(rankF, rank);
+            gapOpenPenalty = Integer.parseInt(cmd.getOptionValue(gapOpen, String.valueOf(gapOpenPenalty)));
             String filename = cmd.getOptionValue(output, "taxonomic_segmentation");
             BufferedWriter writer = new BufferedWriter(new FileWriter(filename+".txt"));
             HashMap<String, ArrayList<Alignment>> blastTab;
