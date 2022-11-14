@@ -155,45 +155,44 @@ public class Main {
         System.out.println("==========================================================");
         Alignment previous = tb.get(0);
         int prevStart = seg.eventIndexes[0];
+
         for (int i = 0; i < tb.size(); i++){
             if (i == 0) {
                 writer.write("\n");
                 writer.write(tb.get(i).sseqid() + " starts at " + seg.eventIndexes[i] + "\n");
+
             }
             else {
-                if(!previous.equals(tb.get(i))){
+                if (!previous.equals(tb.get(i))) {
                     writer.write("=======");
                     writer.write("\n");
                     writer.write(tb.get(i).sseqid() + " starts at " + seg.eventIndexes[i] + "\n");
                     previous = tb.get(i);
                     prevStart = seg.eventIndexes[i];
                 }
-                if(i < tb.size()-1  && !previous.equals(tb.get(i+1))){
-                    if(showRead) {
+                if (i < tb.size() - 1 && !previous.equals(tb.get(i + 1))) {
+                    if (showRead) {
                         writer.write(currentRead.substring(prevStart, seg.eventIndexes[i + 1] - 1));
 
                         writer.write("\n");
                     }
-                     summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
-                     summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
-                             previous.sseqid(), prevStart, seg.eventIndexes[i+1]-1, 0,0 )));
-
-                }
-
-                if (i == tb.size()-1) {
-                    if (showRead) {
-                        writer.write(currentRead.substring(prevStart, maxEnd-1));
-                        writer.write("\n");
-                    }
                     summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
                     summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
-                            previous.sseqid(), prevStart, maxEnd-1, 0,0 )));
-                    writer.write("Ends at " + (maxEnd-1) +"\n");
+                            previous.sseqid(), prevStart, seg.eventIndexes[i + 1] - 1, 0, 0)));
+
+                }
+            }
+
+            if (i == tb.size()-1) {
+                if (showRead) {
+                    writer.write(currentRead.substring(prevStart, maxEnd-1));
                     writer.write("\n");
                 }
-
-
-
+                summaryMap.putIfAbsent(previous.sseqid(), new ArrayList<>());
+                summaryMap.get(previous.sseqid()).add(new Summary(readId, new Alignment(Integer.toString(readId),
+                        previous.sseqid(), prevStart, maxEnd-1, 0,0 )));
+                writer.write("Ends at " + (maxEnd-1) +"\n");
+                writer.write("\n");
             }
 
         }
