@@ -9,6 +9,7 @@ import static main.Main.*;
 
 public class Segmentation {
     public int[] eventIndexes;
+    HashMap<String, Float> emission = new HashMap<>();
     public ArrayList<ArrayList<Alignment>> generateTable(IntervalTree tree) {
         System.out.println("==========================================================");
         System.out.println("Starting to generate computation Table");
@@ -53,7 +54,6 @@ public class Segmentation {
         long startTime = System.currentTimeMillis();
 
         HashMap<String, Tuple> dp = new HashMap<>();
-        HashMap<String, Float> emission = new HashMap<>();
 
         float [] init = new float[alignments.size()];
 
@@ -119,25 +119,39 @@ public class Segmentation {
         String[] keys = matrix.keySet().toArray(new String[0]);
 
         int endIndex = matrix_scores.get(0).length-1;
-
-
         Tuple maxTax = matrix.get(keys[0]);
-        float maxValue = 0;
+        float maxValue = matrix_scores.get(0)[endIndex];
+        int maxTaxInd = 0;
+        for(int i = 0; i < keys.length; i++) {
+            float curScore = matrix_scores.get(i)[endIndex];
+            if (maxValue < curScore) {
+                maxValue = curScore;
+                maxTax = matrix.get(keys[i]);
+                maxTaxInd = i;
+            }
+        }
 
         for (int i = endIndex; i >= 0; i--) {
-            for(int j = 0; j < matrix_scores.size() ; j++) {
-                if (maxValue <=  matrix_scores.get(j)[i]) {
-                    if (maxValue == matrix_scores.get(j)[i]){
-                        maxTax = maxTax.alignment().bitscore() < matrix.get(keys[j]).alignment().bitscore()? matrix.get(keys[j]) : maxTax;
-                    }
-                    else {
-                        maxTax = matrix.get(keys[j]);
-                    }
-                    maxValue =  matrix_scores.get(j)[i];
-
-                }
+            if(i == 0){
+                traceback.add(maxTax.alignment());
+                break;
             }
-            traceback.add(maxTax.alignment());
+            float c_value = matrix_scores.get(maxTaxInd)[i];
+            float n_value = matrix_scores.get(maxTaxInd)[i-1];
+            if (emission.get(maxTax.alignment().sseqid()) * (n_value + match*(eventIndexes[i]-eventIndexes[i-1])) != c_value){
+                for(int j = 0; j < matrix_scores.size(); j++) {
+                    if(emission.get(keys[j]) * (matrix_scores.get(j)[i-1] - switchPenalty*(eventIndexes[i]-eventIndexes[i-1])) == c_value ){
+                        maxTaxInd = j;
+                        maxTax = matrix.get(keys[j]);
+                        break;
+                    }
+                }
+                traceback.add(maxTax.alignment());
+
+            }
+            else {
+                traceback.add(maxTax.alignment());
+            }
         }
 
         long endTime = System.currentTimeMillis();
@@ -154,7 +168,7 @@ public class Segmentation {
             float previousScore = dp.get(current.sseqid()).score()[w];
             float switchScore = dp.get(a.sseqid()).score()[w];
             float score = computeScore(a, current, previousScore, switchScore,length);
-            max = Math.max(max, previousScore + score);
+            max = Math.max(max, score);
 
         }
         return max;
@@ -167,7 +181,7 @@ public class Segmentation {
         int currentGapLength = gapLength.getOrDefault(current.sseqid(), 0);
         if (prev.equals(current)) {
             gapLength.put(current.sseqid(),0);
-            return match * length;
+            return previousScore + match * length;
         }
         else {
 
@@ -175,10 +189,10 @@ public class Segmentation {
 
             if (switchScore - switchPenalty * length > previousScore - pen) {
                 gapLength.put(current.sseqid(),0);
-                return -switchPenalty * length;
+                return switchScore-switchPenalty * length;
             } else {
                 gapLength.put(current.sseqid(), currentGapLength + length);
-                return -pen;
+                return previousScore-pen;
             }
         }
     }
