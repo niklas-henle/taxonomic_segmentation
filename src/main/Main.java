@@ -64,7 +64,7 @@ public class Main {
         flags.addOption(switchF);
         flags.addOption(gapF);
         flags.addOption(rankF);
-        flags.addOption(output);;
+        flags.addOption(output);
         flags.addOption(gapOpen);
 
         CommandLineParser parser = new DefaultParser();
@@ -120,11 +120,7 @@ public class Main {
 
 
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (ParseException e) {
+        } catch (IOException | SQLException | ParseException e) {
             throw new RuntimeException(e);
         }
     }

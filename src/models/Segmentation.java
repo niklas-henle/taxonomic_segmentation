@@ -164,7 +164,7 @@ public class Segmentation {
 
 
     private float computeScore(Alignment prev, Alignment current,  float previousScore, float switchScore ,int length) {
-        int currentGapLength = gapLength.containsKey(current.sseqid())? gapLength.get(current.sseqid()): 0;
+        int currentGapLength = gapLength.getOrDefault(current.sseqid(), 0);
         if (prev.equals(current)) {
             gapLength.put(current.sseqid(),0);
             return match * length;

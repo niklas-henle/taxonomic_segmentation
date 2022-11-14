@@ -88,32 +88,6 @@ public class IntervalTree {
         return rightChild;
     }
 
-    /**
-     * Wrapper function for tree traversal
-     */
-
-    public ArrayList<IntervalNode> traversal() {
-        return depthFirstTraversal(root, new ArrayList<>());
-    }
-
-    /**
-     * depth first traversal of the tree
-     * @param node root node
-     * @param traversal acc list for the traversal
-     * @return arraylist of the alignment nodes
-     */
-    private ArrayList<IntervalNode> depthFirstTraversal( IntervalNode node, ArrayList<IntervalNode> traversal) {
-        if (node == null) {
-            return traversal;
-        }
-
-        traversal.add(node);
-        depthFirstTraversal(node.left, traversal);
-        depthFirstTraversal(node.right, traversal);
-        return traversal;
-
-    }
-
     public int getMaxValue() {
        return getMaxEndValue(this.root);
     }
