@@ -125,23 +125,40 @@ public class Main {
         }
     }
 
+    /**
+     * write the input blast file to a yaml file.
+     * @param blastTab input file to be parsed
+     * @param filename name of the file
+     * @throws IOException
+     */
     private static void writeBlastToYml(HashMap<String, ArrayList<Alignment>> blastTab, String filename) throws IOException {
-        HashMap<String, ArrayList<Summary>> orginial = new HashMap<>();
+        HashMap<String, ArrayList<Summary>> original = new HashMap<>();
 
         for (ArrayList<Alignment> b: blastTab.values()
              ) {
             for (Alignment a: b
                  ) {
-                orginial.putIfAbsent(a.sseqid(), new ArrayList<>());
-                orginial.get(a.sseqid()).add(new Summary(a.readId(), a));
+                original.putIfAbsent(a.sseqid(), new ArrayList<>());
+                original.get(a.sseqid()).add(new Summary(a.readId(), a));
             }
         }
 
-        generateSummary(filename, orginial);
+        generateSummary(filename, original);
 
     }
 
 
+    /**
+     * generate the output for the run of a read.
+     * @param readId current read id
+     * @param seg segmentation object containing the list of eventsindex
+     * @param tb traceback
+     * @param currentRead sequence of the current read
+     * @param maxEnd maximal end value of the alignments
+     * @param writer Writer
+     * @param showRead flag if the read should be written or not
+     * @throws IOException
+     */
     private static void generateOutput(String readId, Segmentation seg, ArrayList<Alignment> tb, String currentRead, int maxEnd, BufferedWriter writer, boolean showRead) throws IOException {
         System.out.println("Generating output for "+ readId);
         System.out.println("==========================================================");
@@ -203,6 +220,12 @@ public class Main {
 
     }
 
+    /**
+     * Generate a summary in form of a yaml file containing the alignment id with the reads it is contained in.
+     * @param filename filename
+     * @param summary List of summary object containing the read id and a list of alignments
+     * @throws IOException
+     */
     private static void generateSummary(String filename, HashMap<String, ArrayList<Summary>> summary) throws IOException {
         System.out.println("Generating Summary");
         System.out.println("==========================================================");

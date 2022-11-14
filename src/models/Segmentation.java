@@ -10,6 +10,12 @@ import static main.Main.*;
 public class Segmentation {
     public int[] eventIndexes;
     HashMap<String, Float> emission = new HashMap<>();
+
+    /**
+     * Generate the initial table used for the dynamic program.
+     * @param tree Alignment Interval tree
+     * @return Nested list of ArrayLists
+     */
     public ArrayList<ArrayList<Alignment>> generateTable(IntervalTree tree) {
         System.out.println("==========================================================");
         System.out.println("Starting to generate computation Table");
@@ -48,6 +54,11 @@ public class Segmentation {
 
     }
 
+    /**
+     * Compute the scoring for the underlying matrix structure.
+     * @param alignments empty table
+     * @return Hashmap containing the taxonomic identifier as key and a Tuple as value.
+     */
     public HashMap<String, Tuple> generateDPTable(ArrayList<ArrayList<Alignment>> alignments) {
         System.out.println("==========================================================");
         System.out.println("Starting to generate Dynamic Table");
@@ -108,6 +119,11 @@ public class Segmentation {
         return dp;
     }
 
+    /**
+     * Copmute the traceback based on the computed scoring table
+     * @param matrix scoring table
+     * @return Traceback as list of alignments
+     */
     public ArrayList<Alignment> traceback(HashMap<String, Tuple> matrix) {
 
         System.out.println("==========================================================");
@@ -161,6 +177,15 @@ public class Segmentation {
         return traceback;
     }
 
+    /**
+     * Get the max score from the different possible computations.
+     * @param Mi alignments present in the current event
+     * @param w previous index
+     * @param dp scoring table
+     * @param current current alignment
+     * @param length length of the event
+     * @return float of the maximal score achievable
+     */
     private float getMaxScore(ArrayList<Alignment> Mi, int w , HashMap<String, Tuple> dp, Alignment current, int length ) {
         float max = -Float.MAX_VALUE;
         for (Alignment a : Mi
@@ -176,7 +201,18 @@ public class Segmentation {
     }
 
 
-
+    /**
+     * Compute the score based on the three options
+     * - match
+     * - switch
+     * - gap elongation or start
+     * @param prev previous alignment
+     * @param current current alignment
+     * @param previousScore previous score
+     * @param switchScore score associated with the alignment present in the event and thus possible switch
+     * @param length length of the event
+     * @return float of the possible score
+     */
     private float computeScore(Alignment prev, Alignment current,  float previousScore, float switchScore ,int length) {
         int currentGapLength = gapLength.getOrDefault(current.sseqid(), 0);
         if (prev.equals(current)) {
@@ -197,6 +233,12 @@ public class Segmentation {
         }
     }
 
+    /**
+     * get the difference between two events
+     * @param a event1
+     * @param b event2
+     * @return list of differences
+     */
     private ArrayList<Alignment> getDifference(ArrayList<Alignment> a ,ArrayList<Alignment> b){
         ArrayList<Alignment> a_clone = (ArrayList<Alignment>) a.clone();
         a_clone.removeAll(b);
@@ -204,6 +246,12 @@ public class Segmentation {
 
     }
 
+    /**
+     * get the start value of the next event
+     * @param current current event
+     * @param next next event
+     * @return int start value of the next event
+     */
     private int getNextStartFromList(ArrayList<Alignment> current ,ArrayList<Alignment> next) {
         ArrayList<Alignment> newStarts = getDifference((ArrayList<Alignment>) next.clone(), current);
         if (newStarts.size() == 0){
